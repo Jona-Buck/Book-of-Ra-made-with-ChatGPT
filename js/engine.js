@@ -73,10 +73,23 @@ function spin(){
     if(!S.fs)document.getElementById('fsb').style.display='none';
   }else S.bal-=bet;
   ui();
-  /* Pre-generate all 5 results */
-  const fg=Array.from({length:5},()=>
-    Array.from({length:3},()=>(S.fs&&S.fsym&&Math.random()<.28)?S.fsym:rnd())
-  );
+  /* Pre-generate all 5 results.
+     Special symbols (book/exp/scarab/isis) may appear max ONCE per reel column. */
+  const SPECIAL=new Set(['book','exp','scarab','isis']);
+  function rndReel(){
+    const used=new Set(), col=[];
+    for(let i=0;i<3;i++){
+      /* Free-spin wild: whole column can be wild (expanding) */
+      if(S.fs&&S.fsym&&Math.random()<.28){col.push(S.fsym);continue;}
+      let sym, tries=0;
+      do{ sym=rnd(); tries++; }
+      while(SPECIAL.has(sym.id)&&used.has(sym.id)&&tries<30);
+      if(SPECIAL.has(sym.id)) used.add(sym.id);
+      col.push(sym);
+    }
+    return col;
+  }
+  const fg=Array.from({length:5},rndReel);
   /* Start all reels fast simultaneously */
   REELS.forEach(rc=>rc.startFastSpin());
   /* After initial fast spin, chain the stops */
