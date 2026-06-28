@@ -292,11 +292,7 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
   from{transform:scale(1);}
   to{transform:scale(1.05);text-shadow:0 0 50px #ffd700,0 0 90px #ff8c00,0 2px 0 #000;}
 }
-#bigwinhint{
-  font-size:clamp(.7rem,2vw,1rem);
-  color:rgba(255,255,255,0.4);
-  margin-top:.8em;letter-spacing:.1em;
-}
+
 
 /* ── Win line label ── */
 #winlbl{
