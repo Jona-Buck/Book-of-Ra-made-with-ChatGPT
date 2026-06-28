@@ -135,26 +135,25 @@ function evalW(){
     }
   }
 
+  /* ── Sofort abschließen (Spiel bleibt nie hängen) ── */
+  ui();
+  S.sp=false; document.getElementById('spin').disabled=false;
+  const g5=document.getElementById('g5050');
+  if(tot>0&&!S.fs&&!S.auto){ g5.disabled=false; g5.classList.add('ready'); }
+  else { g5.disabled=true; g5.classList.remove('ready'); }
+
   if(tot>0){
     S.win=tot; S.bal+=tot;
     document.getElementById('dwin').classList.add('won');
     if(S.fs&&S.fsym)
       for(let r=0;r<5;r++) if(G[r].some(s=>s.id===S.fsym.id)) REELS[r].startWin([0,1,2]);
-    ui();
-    showWinSequence(winData,tot);
-  } else {
-    ui(); finishSpin();
+    /* Rein visuelle Sequenz – blockiert nichts */
+    if(typeof showWinSequence==='function') showWinSequence(winData, tot);
   }
-}
 
-function finishSpin(){
-  S.sp=false; document.getElementById('spin').disabled=false;
-  const g5=document.getElementById('g5050');
-  if(S.win>0&&!S.fs&&!S.auto){ g5.disabled=false; g5.classList.add('ready'); }
-  else { g5.disabled=true; g5.classList.remove('ready'); }
   if(S.auto&&S.aN>0){
     S.aN--;
-    if(S.aN>0&&S.bal>=S.ln*BETS[S.bi]) setTimeout(spin,550);
+    if(S.aN>0&&S.bal>=S.ln*BETS[S.bi]) setTimeout(spin, tot>0?3200:550);
     else { S.auto=false; document.getElementById('auto').classList.remove('on'); }
   }
 }
