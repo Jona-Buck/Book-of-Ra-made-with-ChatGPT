@@ -249,7 +249,7 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
 .fssp img{width:100%;height:100%;object-fit:contain}
 .fsok{padding:clamp(7px,1vw,12px) clamp(20px,3vw,36px);background:linear-gradient(135deg,#3A8020,#205010);border:1.5px solid #60A030;color:#C0FF90;font-family:'Cinzel',serif;font-size:clamp(9px,1.2vw,12px);letter-spacing:.15em;cursor:pointer}
 
-/* ── Big Win Overlay ── */
+
 #bigwinov{
   display:none;position:fixed;inset:0;z-index:1000;
   background:rgba(0,0,0,0.82);
@@ -309,4 +309,63 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
 }
 #winlbl.winlbl-show{
   opacity:1;transform:translate(-50%,-50%) scale(1);
+}
+
+/* ── Gewinnzähler in der Mitte der Walzen ── */
+#winctr{
+  display:none;position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  z-index:20;text-align:center;
+  pointer-events:none;
+}
+#winctr.open{ display:block; }
+#winctr-amt{
+  font-size:clamp(2.2rem,9vw,4.5rem);
+  font-weight:900;
+  color:#ffd700;
+  text-shadow:0 0 24px #ff8c00,0 0 48px #ffd700,0 2px 0 #000;
+  animation:wcpulse .55s ease-in-out infinite alternate;
+  white-space:nowrap;
+}
+@keyframes wcpulse{
+  from{transform:scale(1);}
+  to{transform:scale(1.06);text-shadow:0 0 40px #ffd700,0 0 80px #ff8c00,0 2px 0 #000;}
+}
+
+/* ── Lottie-Overlay (transparent, nur Animationen) ── */
+#bigwinov{
+  display:none;position:fixed;inset:0;z-index:1000;
+  pointer-events:auto;cursor:pointer;
+  background:transparent;
+}
+#bigwinov.open{ display:block; }
+#bigwin-light{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+#bigwin-light svg{ width:min(100vw,100vh);height:min(100vw,100vh); }
+#bigwin-coins{
+  position:absolute;inset:0;
+  display:flex;align-items:flex-end;justify-content:center;
+  pointer-events:none;
+}
+#bigwin-coins svg{ width:100%;height:100%; }
+
+/* ── Win line label ── */
+#winlbl{
+  position:absolute;bottom:8%;left:50%;
+  transform:translateX(-50%) scale(0.8);
+  background:rgba(0,0,0,0.72);
+  color:#ffd700;font-size:clamp(.9rem,2.5vw,1.3rem);
+  font-weight:700;letter-spacing:.1em;
+  padding:.3em .85em;border-radius:.4em;
+  border:1px solid rgba(255,215,0,.4);
+  pointer-events:none;opacity:0;
+  transition:opacity .15s,transform .15s;
+  white-space:nowrap;z-index:50;
+}
+#winlbl.winlbl-show{
+  opacity:1;transform:translateX(-50%) scale(1);
 }
