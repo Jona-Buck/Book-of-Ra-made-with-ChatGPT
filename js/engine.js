@@ -97,14 +97,19 @@ function spin(){
 }
 
 function evalW(){
-  let tot=0;const bet=BETS[S.bi];
-  const winRows=Array.from({length:5},()=>[]);
+  let tot=0; const bet=BETS[S.bi];
+  const winData=[]; /* [{sym,pay,isScatter,ln,count,scRows}] */
 
-  /* scatter */
+  /* ── scatter ── */
   let sc=0;
-  for(let r=0;r<5;r++)for(let row=0;row<3;row++)if(G[r][row].id==='book')sc++;
+  for(let r=0;r<5;r++) for(let row=0;row<3;row++) if(G[r][row].id==='book') sc++;
   if(sc>=3){
-    tot+=S.ln*bet*(sc===3?2:sc===4?20:200);
+    const scPay=S.ln*bet*(sc===3?2:sc===4?20:200);
+    tot+=scPay;
+    const scRows=Array.from({length:5},(_,r)=>{
+      const a=[];for(let row=0;row<3;row++)if(G[r][row].id==='book')a.push(row);return a;
+    });
+    winData.push({isScatter:true,sym:SY[0],pay:scPay,sc,scRows});
     if(!S.fs){
       S.fs=10;S.fsym=SY[Math.floor(Math.random()*SY.length)];
       document.getElementById('fsc').textContent=10;
@@ -112,48 +117,45 @@ function evalW(){
       document.getElementById('fssi').src=S.fsym.s;
       playFsIntro();
     }
-    for(let r=0;r<5;r++)for(let row=0;row<3;row++)
-      if(G[r][row].id==='book'&&!winRows[r].includes(row))winRows[r].push(row);
   }
 
-  /* paylines */
+  /* ── paylines ── */
   for(let l=0;l<S.ln;l++){
-    const ln=PL[l];let fi=G[0][ln[0]];
-    if(fi.id==='book'&&G[1][ln[1]].id!=='book')fi=G[1][ln[1]];
+    const ln=PL[l]; let fi=G[0][ln[0]];
+    if(fi.id==='book'&&G[1][ln[1]].id!=='book') fi=G[1][ln[1]];
     if(fi.id==='book'){
-      let c=0;for(let r=0;r<5;r++){if(G[r][ln[r]].id==='book')c++;else break;}
-      if(c>=3){tot+=fi.pay[c]*bet;for(let r=0;r<c;r++)if(!winRows[r].includes(ln[r]))winRows[r].push(ln[r]);}
+      let c=0; for(let r=0;r<5;r++){if(G[r][ln[r]].id==='book')c++;else break;}
+      if(c>=3){const p=fi.pay[c]*bet;tot+=p;winData.push({isScatter:false,sym:fi,pay:p,ln,count:c});}
       continue;
     }
-    let cnt=0;for(let r=0;r<5;r++){if(G[r][ln[r]].id===fi.id||G[r][ln[r]].id==='book')cnt++;else break;}
+    let cnt=0; for(let r=0;r<5;r++){if(G[r][ln[r]].id===fi.id||G[r][ln[r]].id==='book')cnt++;else break;}
     if(cnt>=3){
-      tot+=(fi.pay[cnt]||0)*bet;
-      for(let r=0;r<cnt;r++)if(!winRows[r].includes(ln[r]))winRows[r].push(ln[r]);
+      const p=(fi.pay[cnt]||0)*bet; tot+=p;
+      winData.push({isScatter:false,sym:fi,pay:p,ln,count:cnt});
     }
   }
 
   if(tot>0){
-    S.win=tot;S.bal+=tot;
+    S.win=tot; S.bal+=tot;
     document.getElementById('dwin').classList.add('won');
-    for(let r=0;r<5;r++)if(winRows[r].length)REELS[r].startWin(winRows[r]);
     if(S.fs&&S.fsym)
-      for(let r=0;r<5;r++)if(G[r].some(s=>s.id===S.fsym.id))REELS[r].startWin([0,1,2]);
+      for(let r=0;r<5;r++) if(G[r].some(s=>s.id===S.fsym.id)) REELS[r].startWin([0,1,2]);
+    ui();
+    showWinSequence(winData,tot);
+  } else {
+    ui(); finishSpin();
   }
+}
 
-  ui();S.sp=false;document.getElementById('spin').disabled=false;
-
-  /* Enable the 50/50 action button only when there's a win to gamble,
-     and not during free spins or autoplay (keeps those flows clean). */
+function finishSpin(){
+  S.sp=false; document.getElementById('spin').disabled=false;
   const g5=document.getElementById('g5050');
-  if(tot>0&&!S.fs&&!S.auto){
-    g5.disabled=false; g5.classList.add('ready');
-  }else{
-    g5.disabled=true; g5.classList.remove('ready');
-  }
+  if(S.win>0&&!S.fs&&!S.auto){ g5.disabled=false; g5.classList.add('ready'); }
+  else { g5.disabled=true; g5.classList.remove('ready'); }
   if(S.auto&&S.aN>0){
     S.aN--;
-    if(S.aN>0&&S.bal>=S.ln*BETS[S.bi])setTimeout(spin,550);
-    else{S.auto=false;document.getElementById('auto').classList.remove('on');}
+    if(S.aN>0&&S.bal>=S.ln*BETS[S.bi]) setTimeout(spin,550);
+    else { S.auto=false; document.getElementById('auto').classList.remove('on'); }
   }
 }
 
