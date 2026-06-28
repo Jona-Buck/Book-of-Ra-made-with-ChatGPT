@@ -248,3 +248,69 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
 .fssp{width:clamp(52px,8.5vw,82px);height:clamp(52px,8.5vw,82px);margin:0 auto 12px}
 .fssp img{width:100%;height:100%;object-fit:contain}
 .fsok{padding:clamp(7px,1vw,12px) clamp(20px,3vw,36px);background:linear-gradient(135deg,#3A8020,#205010);border:1.5px solid #60A030;color:#C0FF90;font-family:'Cinzel',serif;font-size:clamp(9px,1.2vw,12px);letter-spacing:.15em;cursor:pointer}
+
+/* ── Big Win Overlay ── */
+#bigwinov{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,0.82);
+  align-items:center;justify-content:center;
+  flex-direction:column;cursor:pointer;
+}
+#bigwinov.open{ display:flex; }
+
+#bigwin-light{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+#bigwin-light svg{ width:min(90vw,90vh);height:min(90vw,90vh); }
+
+#bigwin-coins{
+  position:absolute;inset:0;
+  display:flex;align-items:flex-end;justify-content:center;
+  pointer-events:none;
+}
+#bigwin-coins svg{ width:100%;height:100%; }
+
+#bigwintxt{
+  position:relative;z-index:2;
+  text-align:center;pointer-events:none;
+}
+#bigwinlabel{
+  font-size:clamp(1.2rem,4vw,2rem);
+  color:#ffd700;letter-spacing:.25em;
+  text-shadow:0 0 20px #ff8c00,0 0 40px #ffd700;
+  margin-bottom:.3em;
+}
+#bigwinamt{
+  font-size:clamp(2.5rem,10vw,5rem);font-weight:900;
+  color:#fff;letter-spacing:.05em;
+  text-shadow:0 0 30px #ffd700,0 0 60px #ff8c00,0 2px 0 #000;
+  animation:bigwinpulse 0.6s ease-in-out infinite alternate;
+}
+@keyframes bigwinpulse{
+  from{transform:scale(1);}
+  to{transform:scale(1.05);text-shadow:0 0 50px #ffd700,0 0 90px #ff8c00,0 2px 0 #000;}
+}
+#bigwinhint{
+  font-size:clamp(.7rem,2vw,1rem);
+  color:rgba(255,255,255,0.4);
+  margin-top:.8em;letter-spacing:.1em;
+}
+
+/* ── Win line label ── */
+#winlbl{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(0.7);
+  background:rgba(0,0,0,0.75);
+  color:#ffd700;font-size:clamp(1rem,3vw,1.5rem);
+  font-weight:700;letter-spacing:.12em;
+  padding:.35em .9em;border-radius:.4em;
+  border:1px solid #ffd70066;
+  pointer-events:none;opacity:0;
+  transition:opacity .15s,transform .15s;
+  white-space:nowrap;z-index:50;
+}
+#winlbl.winlbl-show{
+  opacity:1;transform:translate(-50%,-50%) scale(1);
+}
