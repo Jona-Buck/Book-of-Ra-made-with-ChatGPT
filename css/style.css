@@ -333,26 +333,6 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
   to{transform:scale(1.06);text-shadow:0 0 40px #ffd700,0 0 80px #ff8c00,0 2px 0 #000;}
 }
 
-/* ── Lottie-Overlay (transparent, nur Animationen) ── */
-#bigwinov{
-  display:none;position:fixed;inset:0;z-index:1000;
-  pointer-events:auto;cursor:pointer;
-  background:transparent;
-}
-#bigwinov.open{ display:block; }
-#bigwin-light{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  pointer-events:none;
-}
-#bigwin-light svg{ width:min(100vw,100vh);height:min(100vw,100vh); }
-#bigwin-coins{
-  position:absolute;inset:0;
-  display:flex;align-items:flex-end;justify-content:center;
-  pointer-events:none;
-}
-#bigwin-coins svg{ width:100%;height:100%; }
-
 /* ── Win line label ── */
 #winlbl{
   position:absolute;bottom:8%;left:50%;
@@ -369,3 +349,78 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
 #winlbl.winlbl-show{
   opacity:1;transform:translateX(-50%) scale(1);
 }
+
+/* ── Skip-Overlay (fängt Klicks während Linien-Sequenz) ── */
+#winskip{display:none;position:fixed;inset:0;z-index:490;cursor:pointer;}
+#winskip.active{display:block;}
+
+/* ── Lottie-Overlay ── */
+#bigwinov{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,0.78);cursor:pointer;
+  flex-direction:column;align-items:center;justify-content:center;
+}
+#bigwinov.open{display:flex;}
+
+/* Layer-Reihenfolge: Münzen hinten, Licht mitte, Text vorne */
+#bigwin-coins{
+  position:absolute;inset:0;z-index:1;
+  display:flex;align-items:flex-end;justify-content:center;
+  pointer-events:none;overflow:hidden;
+}
+#bigwin-coins > div{position:absolute;inset:0;}
+#bigwin-coins svg{width:100%;height:100%;}
+
+#bigwin-light{
+  position:absolute;inset:0;z-index:2;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+#bigwin-light svg{width:min(90vw,90vh);height:min(90vw,90vh);}
+
+#bigwin-text{
+  position:relative;z-index:3;text-align:center;
+  pointer-events:none;display:flex;flex-direction:column;align-items:center;
+}
+
+/* Tier-Labels */
+#bigwin-tier{
+  font-size:clamp(1.4rem,5vw,2.8rem);font-weight:900;letter-spacing:.2em;
+  text-transform:uppercase;margin-bottom:.3em;
+  animation:tierIn .4s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes tierIn{from{transform:scale(.4);opacity:0;}to{transform:scale(1);opacity:1;}}
+.tier-big    {color:#ffd700;text-shadow:0 0 20px #ff8c00,0 0 40px #ffd700;}
+.tier-mega   {color:#ff9f00;text-shadow:0 0 25px #ff5500,0 0 50px #ff9f00;}
+.tier-super  {color:#ff6600;text-shadow:0 0 30px #ff2200,0 0 60px #ff6600;}
+.tier-ultra  {color:#ff44aa;text-shadow:0 0 30px #ff0066,0 0 60px #ff44aa;}
+.tier-legendary{
+  color:#fff;
+  text-shadow:0 0 20px #ffd700,0 0 40px #ff8c00,0 0 80px #ffd700;
+  animation:legendaryPulse 1s ease-in-out infinite alternate, tierIn .4s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes legendaryPulse{from{letter-spacing:.2em;}to{letter-spacing:.35em;}}
+
+#bigwin-amount{
+  font-size:clamp(2.8rem,12vw,6rem);font-weight:900;color:#fff;
+  text-shadow:0 0 30px #ffd700,0 0 60px #ff8c00,0 3px 0 rgba(0,0,0,.5);
+  animation:amtPulse .6s ease-in-out infinite alternate;
+}
+@keyframes amtPulse{
+  from{transform:scale(1);}
+  to{transform:scale(1.04);text-shadow:0 0 50px #ffd700,0 0 100px #ff8c00,0 3px 0 rgba(0,0,0,.5);}
+}
+
+/* ── Gewinnzähler in der Mitte der Walzen ── */
+#winctr{
+  display:none;position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);z-index:20;text-align:center;pointer-events:none;
+}
+#winctr.open{display:block;}
+#winctr-amt{
+  font-size:clamp(2rem,8vw,4rem);font-weight:900;color:#ffd700;
+  text-shadow:0 0 20px #ff8c00,0 0 40px #ffd700,0 2px 0 #000;
+  white-space:nowrap;
+}
+
+/* ── Win-Line Label ──
