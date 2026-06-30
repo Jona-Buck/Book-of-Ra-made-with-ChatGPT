@@ -137,17 +137,27 @@ function evalW(){
     }
   }
 
-  /* ── Paylines ── */
+  /* ── Paylines ──
+     Buch (book) ist NUR Wild + Scatter — es hat KEINE eigene Linien-Auszahlung
+     (die Scatter-Auswertung oben deckt "3+ Bücher" bereits vollständig ab).
+     Forscher (exp) zahlt bereits ab 2 Symbolen, alle anderen ab 3 (Original-Regel). */
   for(let l=0;l<S.ln;l++){
-    const ln=PL[l]; let fi=G[0][ln[0]];
-    if(fi.id==='book'&&G[1][ln[1]].id!=='book') fi=G[1][ln[1]];
-    if(fi.id==='book'){
-      let c=0; for(let r=0;r<5;r++){if(G[r][ln[r]].id==='book')c++;else break;}
-      if(c>=3){const p=fi.pay[c]*bet;tot+=p;winData.push({isScatter:false,sym:fi,pay:p,ln,count:c});}
-      continue;
+    const ln=PL[l];
+
+    /* Führende Bücher überspringen, um das erste "echte" Linien-Symbol zu finden */
+    let startR=0;
+    while(startR<5 && G[startR][ln[startR]].id==='book') startR++;
+    if(startR>=5) continue; /* komplette Linie nur Bücher → bereits über Scatter abgedeckt */
+
+    const fi=G[startR][ln[startR]];
+    const MIN = fi.id==='exp' ? 2 : 3;
+
+    let cnt=0;
+    for(let r=0;r<5;r++){
+      if(G[r][ln[r]].id===fi.id||G[r][ln[r]].id==='book') cnt++;
+      else break;
     }
-    let cnt=0; for(let r=0;r<5;r++){if(G[r][ln[r]].id===fi.id||G[r][ln[r]].id==='book')cnt++;else break;}
-    if(cnt>=3){
+    if(cnt>=MIN){
       const p=(fi.pay[cnt]||0)*bet; tot+=p;
       winData.push({isScatter:false,sym:fi,pay:p,ln,count:cnt});
     }
