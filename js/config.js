@@ -3,7 +3,7 @@ const I={A:"./assets/A.webp",K:"./assets/K.webp",J:"./assets/J.webp",Q:"./assets
 
 const SY=[
   {id:'book',  s:I.book,  n:'Buch (Wild/Scatter)',pay:{3:18,4:180,5:1800},w:2, fill:true},
-  {id:'exp',   s:I.exp,   n:'Abenteurer',         pay:{3:10,4:100,5:1000},w:3, fill:true},
+  {id:'exp',   s:I.exp,   n:'Abenteurer',         pay:{2:5,3:10,4:100,5:1000},w:3, fill:true},
   {id:'isis',  s:I.isis,  n:'Isis',                pay:{3:5,4:50,5:500},  w:4},
   {id:'scarab',s:I.scarab,n:'Skarab\u00e4us',      pay:{3:4,4:40,5:400},  w:5},
   {id:'A',     s:I.A,     n:'Ass',                 pay:{3:2,4:20,5:200},  w:6},
