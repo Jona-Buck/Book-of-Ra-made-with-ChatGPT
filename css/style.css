@@ -249,91 +249,31 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
 .fssp img{width:100%;height:100%;object-fit:contain}
 .fsok{padding:clamp(7px,1vw,12px) clamp(20px,3vw,36px);background:linear-gradient(135deg,#3A8020,#205010);border:1.5px solid #60A030;color:#C0FF90;font-family:'Cinzel',serif;font-size:clamp(9px,1.2vw,12px);letter-spacing:.15em;cursor:pointer}
 
+/* ═══════════════════════════════════════
+   WIN EFFECTS — Linien, Zähler, Big-Win-Overlay
+   ═══════════════════════════════════════ */
 
-#bigwinov{
-  display:none;position:fixed;inset:0;z-index:1000;
-  background:rgba(0,0,0,0.82);
-  align-items:center;justify-content:center;
-  flex-direction:column;cursor:pointer;
-}
-#bigwinov.open{ display:flex; }
+/* Skip-Overlay (fängt Klicks während Linien-Sequenz) */
+#winskip{display:none;position:fixed;inset:0;z-index:490;cursor:pointer;}
+#winskip.active{display:block;}
 
-#bigwin-light{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  pointer-events:none;
-}
-#bigwin-light svg{ width:min(90vw,90vh);height:min(90vw,90vh); }
-
-#bigwin-coins{
-  position:absolute;inset:0;
-  display:flex;align-items:flex-end;justify-content:center;
-  pointer-events:none;
-}
-#bigwin-coins svg{ width:100%;height:100%; }
-
-#bigwintxt{
-  position:relative;z-index:2;
-  text-align:center;pointer-events:none;
-}
-#bigwinlabel{
-  font-size:clamp(1.2rem,4vw,2rem);
-  color:#ffd700;letter-spacing:.25em;
-  text-shadow:0 0 20px #ff8c00,0 0 40px #ffd700;
-  margin-bottom:.3em;
-}
-#bigwinamt{
-  font-size:clamp(2.5rem,10vw,5rem);font-weight:900;
-  color:#fff;letter-spacing:.05em;
-  text-shadow:0 0 30px #ffd700,0 0 60px #ff8c00,0 2px 0 #000;
-  animation:bigwinpulse 0.6s ease-in-out infinite alternate;
-}
-@keyframes bigwinpulse{
-  from{transform:scale(1);}
-  to{transform:scale(1.05);text-shadow:0 0 50px #ffd700,0 0 90px #ff8c00,0 2px 0 #000;}
-}
-
-
-/* ── Win line label ── */
-#winlbl{
-  position:absolute;top:50%;left:50%;
-  transform:translate(-50%,-50%) scale(0.7);
-  background:rgba(0,0,0,0.75);
-  color:#ffd700;font-size:clamp(1rem,3vw,1.5rem);
-  font-weight:700;letter-spacing:.12em;
-  padding:.35em .9em;border-radius:.4em;
-  border:1px solid #ffd70066;
-  pointer-events:none;opacity:0;
-  transition:opacity .15s,transform .15s;
-  white-space:nowrap;z-index:50;
-}
-#winlbl.winlbl-show{
-  opacity:1;transform:translate(-50%,-50%) scale(1);
-}
-
-/* ── Gewinnzähler in der Mitte der Walzen ── */
+/* Gewinnzähler in der Mitte der Walzen — MUSS über der Linien-Canvas (z:500) liegen */
 #winctr{
-  display:none;position:absolute;
-  top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  z-index:600;text-align:center;
-  pointer-events:none;
+  display:none;position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);z-index:600;text-align:center;pointer-events:none;
 }
-#winctr.open{ display:block; }
+#winctr.open{display:block;}
 #winctr-amt{
-  font-size:clamp(2.2rem,9vw,4.5rem);
-  font-weight:900;
-  color:#ffd700;
-  text-shadow:0 0 24px #ff8c00,0 0 48px #ffd700,0 2px 0 #000;
-  animation:wcpulse .55s ease-in-out infinite alternate;
+  font-size:clamp(2rem,8vw,4rem);font-weight:900;color:#ffd700;
+  -webkit-text-stroke:3px rgba(0,0,0,.85);
+  paint-order:stroke fill;
+  text-shadow:0 0 14px rgba(0,0,0,.9),0 0 28px #ff8c00,0 0 50px #ffd700,0 3px 0 #000;
   white-space:nowrap;
-}
-@keyframes wcpulse{
-  from{transform:scale(1);}
-  to{transform:scale(1.06);text-shadow:0 0 40px #ffd700,0 0 80px #ff8c00,0 2px 0 #000;}
+  background:radial-gradient(ellipse 70% 80% at 50% 50%, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 75%);
+  padding:.15em .5em;
 }
 
-/* ── Win line label ── */
+/* Win-Line Label */
 #winlbl{
   position:absolute;bottom:8%;left:50%;
   transform:translateX(-50%) scale(0.8);
@@ -346,15 +286,9 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
   transition:opacity .15s,transform .15s;
   white-space:nowrap;z-index:50;
 }
-#winlbl.winlbl-show{
-  opacity:1;transform:translateX(-50%) scale(1);
-}
+#winlbl.winlbl-show{opacity:1;transform:translateX(-50%) scale(1);}
 
-/* ── Skip-Overlay (fängt Klicks während Linien-Sequenz) ── */
-#winskip{display:none;position:fixed;inset:0;z-index:490;cursor:pointer;}
-#winskip.active{display:block;}
-
-/* ── Lottie-Overlay ── */
+/* Lottie Big-Win-Overlay */
 #bigwinov{
   display:none;position:fixed;inset:0;z-index:1000;
   background:rgba(0,0,0,0.78);cursor:pointer;
@@ -362,12 +296,10 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
 }
 #bigwinov.open{display:flex;}
 
-/* Layer-Reihenfolge: Münzen hinten, Licht mitte, Text vorne */
 #bigwin-coins{
   position:absolute;inset:0;z-index:1;
   display:flex;align-items:flex-end;justify-content:center;
   pointer-events:none;overflow:hidden;
-  /* Loch in der Mitte — Münzen rahmen den Wert ein, nicht drüber */
   mask-image:radial-gradient(ellipse 42% 38% at 50% 48%,
     transparent 0%,transparent 58%,rgba(0,0,0,.4) 72%,black 88%);
   -webkit-mask-image:radial-gradient(ellipse 42% 38% at 50% 48%,
@@ -388,17 +320,16 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
   pointer-events:none;display:flex;flex-direction:column;align-items:center;
 }
 
-/* Tier-Labels */
 #bigwin-tier{
   font-size:clamp(1.4rem,5vw,2.8rem);font-weight:900;letter-spacing:.2em;
   text-transform:uppercase;margin-bottom:.3em;
   animation:tierIn .4s cubic-bezier(.34,1.56,.64,1) both;
 }
 @keyframes tierIn{from{transform:scale(.4);opacity:0;}to{transform:scale(1);opacity:1;}}
-.tier-big    {color:#ffd700;text-shadow:0 0 20px #ff8c00,0 0 40px #ffd700;}
-.tier-mega   {color:#ff9f00;text-shadow:0 0 25px #ff5500,0 0 50px #ff9f00;}
-.tier-super  {color:#ff6600;text-shadow:0 0 30px #ff2200,0 0 60px #ff6600;}
-.tier-ultra  {color:#ff44aa;text-shadow:0 0 30px #ff0066,0 0 60px #ff44aa;}
+.tier-big{color:#ffd700;text-shadow:0 0 20px #ff8c00,0 0 40px #ffd700;}
+.tier-mega{color:#ff9f00;text-shadow:0 0 25px #ff5500,0 0 50px #ff9f00;}
+.tier-super{color:#ff6600;text-shadow:0 0 30px #ff2200,0 0 60px #ff6600;}
+.tier-ultra{color:#ff44aa;text-shadow:0 0 30px #ff0066,0 0 60px #ff44aa;}
 .tier-legendary{
   color:#fff;
   text-shadow:0 0 20px #ffd700,0 0 40px #ff8c00,0 0 80px #ffd700;
@@ -415,26 +346,3 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
   from{transform:scale(1);}
   to{transform:scale(1.04);text-shadow:0 0 50px #ffd700,0 0 100px #ff8c00,0 3px 0 rgba(0,0,0,.5);}
 }
-
-/* ── Gewinnzähler in der Mitte der Walzen ── */
-#winctr{
-  display:none;position:absolute;top:50%;left:50%;
-  transform:translate(-50%,-50%);z-index:20;text-align:center;pointer-events:none;
-}
-#winctr.open{display:block;}
-#winctr-amt{
-  font-size:clamp(2rem,8vw,4rem);font-weight:900;color:#ffd700;
-  /* Starker dunkler Outline + Glow — bleibt lesbar auch über der Leuchtlinie */
-  -webkit-text-stroke:3px rgba(0,0,0,.85);
-  paint-order:stroke fill;
-  text-shadow:
-    0 0 14px rgba(0,0,0,.9),
-    0 0 28px #ff8c00,
-    0 0 50px #ffd700,
-    0 3px 0 #000;
-  white-space:nowrap;
-  background:radial-gradient(ellipse 70% 80% at 50% 50%, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 75%);
-  padding:.15em .5em;
-}
-
-/* ── Win-Line Label ──
