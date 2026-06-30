@@ -35,14 +35,15 @@ function _drawWinLine(wd,ro){
     ctx.restore();return;
   }
 
-  /* Alle 5 Punkte – Linie zeigt immer den vollen Payline-Pfad */
+  /* Linie nur über die tatsächlich gewinnenden Walzen (wie im Original) —
+     stoppt exakt nach wd.count, läuft NICHT über die restlichen Walzen weiter. */
   const pts=[];
-  for(let r=0;r<5;r++){
+  for(let r=0;r<wd.count;r++){
     const rr=REELS[r].cv.getBoundingClientRect(),ch=rr.height/3;
-    pts.push({x:rr.left-ro.left+rr.width/2, y:rr.top-ro.top+wd.ln[r]*ch+ch/2, win:r<wd.count});
+    pts.push({x:rr.left-ro.left+rr.width/2, y:rr.top-ro.top+wd.ln[r]*ch+ch/2});
   }
+  if(pts.length<2){ ctx.restore(); return; }
 
-  /* Gesamte Linie (alle 5) */
   [[26,'rgba(255,160,0,.07)'],[15,'rgba(255,210,0,.18)'],
    [7,'rgba(255,235,40,.45)'],[3,'rgba(255,250,100,.85)'],[1.5,'rgba(255,255,220,.9)']]
   .forEach(([w,c])=>{
@@ -51,9 +52,7 @@ function _drawWinLine(wd,ro){
     pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.stroke();
   });
 
-  /* Gewinn-Knotenpunkte heller */
   pts.forEach(p=>{
-    if(!p.win)return;
     const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,16);
     g.addColorStop(0,'rgba(255,255,240,1)');g.addColorStop(.4,'rgba(255,218,60,.9)');g.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,16,0,Math.PI*2);ctx.fill();
