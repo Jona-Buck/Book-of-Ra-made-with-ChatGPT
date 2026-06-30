@@ -109,6 +109,39 @@ class RC{
   /* snap flash after reel stops */
   _snap(){}   /* no blink */
 
+  /* ── Expanding-Wild Morph: einzelne Reihe von oldSym zu newSym ──
+     Erste Hälfte: oldSym schrumpft vertikal auf 0 (wie Buchseite, die sich schließt).
+     Zweite Hälfte: newSym wächst vertikal von 0 auf voll (Seite öffnet sich). */
+  morphRow(row,newSym,dur,done){
+    if(this._anim)cancelAnimationFrame(this._anim);
+    if(this._win){cancelAnimationFrame(this._win);this._win=null;}
+    const ctx=this.ctx,W=this.W,cH=this.cH,oldSym=this.syms[row],self=this;
+    const y=row*cH,t0=performance.now();
+    const frame=now=>{
+      const t=Math.min((now-t0)/dur,1);
+      self._drawStatic(self.syms,0); /* andere Reihen bleiben unverändert sichtbar */
+      ctx.save();
+      ctx.beginPath();ctx.rect(0,y,W,cH);ctx.clip();
+      if(t<0.5){
+        const p=t/0.5,sc=Math.max(1-p,0.001);
+        ctx.save();ctx.translate(0,y+cH/2);ctx.scale(1,sc);ctx.translate(0,-(y+cH/2));
+        self._drawSym(ctx,oldSym,0,y,W,cH);
+        ctx.restore();
+      }else{
+        const p=(t-0.5)/0.5,sc=Math.max(p,0.001);
+        ctx.save();ctx.translate(0,y+cH/2);ctx.scale(1,sc);ctx.translate(0,-(y+cH/2));
+        self._drawSym(ctx,newSym,0,y,W,cH);
+        ctx.restore();
+      }
+      ctx.restore();
+      if(t<1){self._anim=requestAnimationFrame(frame);return;}
+      self.syms[row]=newSym;
+      self._drawStatic(self.syms,0);
+      if(done)done();
+    };
+    this._anim=requestAnimationFrame(frame);
+  }
+
   /* ── FAST SPIN: constant-speed loop until triggerStop() called ── */
   startFastSpin(){
     if(this._anim)cancelAnimationFrame(this._anim);
@@ -200,3 +233,32 @@ class RC{
 }
 
 /* ── REELS: one RC instance per reel column ── */
+
+/* ── Orchestriert die sequentielle Expand-Animation über mehrere Walzen ──
+   Walze für Walze (links→rechts), pro Walze alle 3 Reihen leicht versetzt
+   (wie umblätternde Buchseiten). Ruft allDone() erst auf, wenn wirklich alles fertig ist. */
+function playExpandMorph(reelIdxs,fsym,allDone){
+  if(reelIdxs.length===0){ allDone(); return; }
+  const ROW_STAGGER=90, MORPH_DUR=260, REEL_GAP=120;
+  const perReelTime=ROW_STAGGER*2+MORPH_DUR; /* letzte Reihe startet bei 2*stagger, läuft MORPH_DUR */
+
+  function startReel(i){
+    const r=reelIdxs[i];
+    for(let row=0;row<3;row++){
+      setTimeout(()=>{ REELS[r].morphRow(row,fsym,MORPH_DUR,()=>{}); }, row*ROW_STAGGER);
+    }
+    if(i<reelIdxs.length-1){
+      setTimeout(()=>startReel(i+1), perReelTime+REEL_GAP);
+    }else{
+      /* Letzte Walze fertig → alle betroffenen Walzen kurz golden aufleuchten lassen */
+      setTimeout(()=>{
+        reelIdxs.forEach(ri=>REELS[ri].startWin([0,1,2]));
+        setTimeout(()=>{
+          reelIdxs.forEach(ri=>REELS[ri].clearWin());
+          allDone();
+        },500);
+      },perReelTime+60);
+    }
+  }
+  startReel(0);
+}
