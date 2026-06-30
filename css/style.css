@@ -316,7 +316,7 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
   display:none;position:absolute;
   top:50%;left:50%;
   transform:translate(-50%,-50%);
-  z-index:20;text-align:center;
+  z-index:600;text-align:center;
   pointer-events:none;
 }
 #winctr.open{ display:block; }
@@ -424,8 +424,17 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
 #winctr.open{display:block;}
 #winctr-amt{
   font-size:clamp(2rem,8vw,4rem);font-weight:900;color:#ffd700;
-  text-shadow:0 0 20px #ff8c00,0 0 40px #ffd700,0 2px 0 #000;
+  /* Starker dunkler Outline + Glow — bleibt lesbar auch über der Leuchtlinie */
+  -webkit-text-stroke:3px rgba(0,0,0,.85);
+  paint-order:stroke fill;
+  text-shadow:
+    0 0 14px rgba(0,0,0,.9),
+    0 0 28px #ff8c00,
+    0 0 50px #ffd700,
+    0 3px 0 #000;
   white-space:nowrap;
+  background:radial-gradient(ellipse 70% 80% at 50% 50%, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 75%);
+  padding:.15em .5em;
 }
 
 /* ── Win-Line Label ──
