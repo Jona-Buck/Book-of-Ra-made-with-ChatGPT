@@ -95,17 +95,19 @@ function showWinSequence(winData,tot){
   }
   skip.classList.add('active'); skip.onclick=doSkip;
 
+  /* Linien werden NACHEINANDER gezeigt (wie im Original) — nie gleichzeitig
+     übereinander, damit sich Glow-Schichten an Kreuzungspunkten nicht aufsummieren. */
   let idx=0,running=0;
   function next(){
     if(_ws!==myWs){ctr.classList.remove('open');_clearCvs();skip.classList.remove('active');return;}
     if(idx>=winData.length){
-      _clearCvs(); winData.forEach(wd=>_drawWinLine(wd,ro));
+      _clearCvs();
       setTimeout(()=>{
         if(_ws!==myWs)return;
-        ctr.classList.remove('open');_clearCvs();
+        ctr.classList.remove('open');
         skip.classList.remove('active');skip.onclick=null;
         _startLottie(tot);
-      },800); return;
+      },300); return;
     }
     const wd=winData[idx++],prev=running; running+=wd.pay;
     _clearCvs(); _drawWinLine(wd,ro);
