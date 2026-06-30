@@ -98,9 +98,10 @@ function spin(){
 
 function evalW(){
   let tot=0; const bet=BETS[S.bi];
-  const winData=[]; /* [{sym,pay,isScatter,ln,count,scRows}] */
+  const winData=[];
+  let fsTrigger=false; /* true wenn Freispiele gerade getriggert */
 
-  /* ── scatter ── */
+  /* ── Scatter ── */
   let sc=0;
   for(let r=0;r<5;r++) for(let row=0;row<3;row++) if(G[r][row].id==='book') sc++;
   if(sc>=3){
@@ -111,7 +112,8 @@ function evalW(){
     });
     winData.push({isScatter:true,sym:SY[0],pay:scPay,sc,scRows});
     if(!S.fs){
-      S.fs=10;S.fsym=SY[Math.floor(Math.random()*SY.length)];
+      fsTrigger=true;
+      S.fs=10; S.fsym=SY[Math.floor(Math.random()*SY.length)];
       document.getElementById('fsc').textContent=10;
       document.getElementById('fss').textContent=S.fsym.n.split(' ')[0];
       document.getElementById('fssi').src=S.fsym.s;
@@ -119,7 +121,23 @@ function evalW(){
     }
   }
 
-  /* ── paylines ── */
+  /* ── Expanding Wild (nur in Freispielen) ──
+     Wenn das gewählte Symbol auf ≥3 Walzen erscheint,
+     werden ALLE Zellen der betroffenen Walzen auf dieses Symbol gesetzt. */
+  if(S.fs&&S.fsym&&!fsTrigger){
+    const ewReels=[];
+    for(let r=0;r<5;r++) if(G[r].some(s=>s.id===S.fsym.id)) ewReels.push(r);
+    if(ewReels.length>=3){
+      for(const r of ewReels){
+        G[r]=[S.fsym,S.fsym,S.fsym];
+        REELS[r].syms=[S.fsym,S.fsym,S.fsym];
+        REELS[r]._drawStatic(REELS[r].syms,0);
+        REELS[r].startWin([0,1,2]); /* visuell hervorheben */
+      }
+    }
+  }
+
+  /* ── Paylines ── */
   for(let l=0;l<S.ln;l++){
     const ln=PL[l]; let fi=G[0][ln[0]];
     if(fi.id==='book'&&G[1][ln[1]].id!=='book') fi=G[1][ln[1]];
@@ -135,7 +153,7 @@ function evalW(){
     }
   }
 
-  /* ── Sofort abschließen (Spiel bleibt nie hängen) ── */
+  /* ── Sofort abschließen ── */
   ui();
   S.sp=false; document.getElementById('spin').disabled=false;
   const g5=document.getElementById('g5050');
@@ -145,16 +163,16 @@ function evalW(){
   if(tot>0){
     S.win=tot; S.bal+=tot;
     document.getElementById('dwin').classList.add('won');
-    if(S.fs&&S.fsym)
-      for(let r=0;r<5;r++) if(G[r].some(s=>s.id===S.fsym.id)) REELS[r].startWin([0,1,2]);
-    /* Rein visuelle Sequenz – blockiert nichts */
-    if(typeof showWinSequence==='function') showWinSequence(winData, tot);
+    /* Win-Sequenz NUR wenn kein Freispiel-Intro läuft */
+    if(!fsTrigger && typeof showWinSequence==='function'){
+      try{ showWinSequence(winData,tot); }catch(e){ console.error('WinSeq:',e); }
+    }
   }
 
   if(S.auto&&S.aN>0){
     S.aN--;
-    if(S.aN>0&&S.bal>=S.ln*BETS[S.bi]) setTimeout(spin, tot>0?3200:550);
-    else { S.auto=false; document.getElementById('auto').classList.remove('on'); }
+    if(S.aN>0&&S.bal>=S.ln*BETS[S.bi]) setTimeout(spin,tot>0&&!fsTrigger?3200:550);
+    else{ S.auto=false; document.getElementById('auto').classList.remove('on'); }
   }
 }
 
