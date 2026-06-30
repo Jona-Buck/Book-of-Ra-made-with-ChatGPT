@@ -51,12 +51,6 @@ function _drawWinLine(wd,ro){
     ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
     pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.stroke();
   });
-
-  pts.forEach(p=>{
-    const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,16);
-    g.addColorStop(0,'rgba(255,255,240,1)');g.addColorStop(.4,'rgba(255,218,60,.9)');g.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,16,0,Math.PI*2);ctx.fill();
-  });
   ctx.restore();
 }
 
