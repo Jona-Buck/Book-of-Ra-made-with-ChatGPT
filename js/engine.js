@@ -77,10 +77,11 @@ function spin(){
      Special symbols (book/exp/scarab/isis) may appear max ONCE per reel column. */
   const SPECIAL=new Set(['book','exp','scarab','isis']);
   function rndReel(){
+    /* Gleiche Wahrscheinlichkeiten wie immer — auch während Freispielen.
+       Das Expanding Wild entsteht NICHT durch erhöhte Chance, sondern erst
+       danach, wenn das gewählte Symbol zufällig auf 3+ Walzen landet. */
     const used=new Set(), col=[];
     for(let i=0;i<3;i++){
-      /* Free-spin wild: whole column can be wild (expanding) */
-      if(S.fs&&S.fsym&&Math.random()<.28){col.push(S.fsym);continue;}
       let sym, tries=0;
       do{ sym=rnd(); tries++; }
       while(SPECIAL.has(sym.id)&&used.has(sym.id)&&tries<30);
@@ -113,7 +114,7 @@ function evalW(){
     winData.push({isScatter:true,sym:SY[0],pay:scPay,sc,scRows});
     if(!S.fs){
       fsTrigger=true;
-      S.fs=10; S.fsym=SY[Math.floor(Math.random()*SY.length)];
+      S.fs=10; { const cand=SY.filter(s=>s.id!=='book'); S.fsym=cand[Math.floor(Math.random()*cand.length)]; }
       document.getElementById('fsc').textContent=10;
       document.getElementById('fss').textContent=S.fsym.n.split(' ')[0];
       document.getElementById('fssi').src=S.fsym.s;
@@ -122,18 +123,18 @@ function evalW(){
   }
 
   /* ── Expanding Wild (nur in Freispielen) ──
-     Wenn das gewählte Symbol auf ≥3 Walzen erscheint,
-     werden ALLE Zellen der betroffenen Walzen auf dieses Symbol gesetzt. */
+     Wenn das gewählte Symbol auf ≥3 Walzen erscheint, werden ALLE Zellen
+     der betroffenen Walzen auf dieses Symbol gesetzt. G[] wird SOFORT
+     aktualisiert (für korrekte Auswertung unten); REELS[r].syms bleibt
+     bis zur Morph-Animation unverändert, damit der Spieler den Wandel
+     tatsächlich sieht (wie im Original: Seite für Seite, Walze für Walze). */
+  let ewReels=[];
   if(S.fs&&S.fsym&&!fsTrigger){
-    const ewReels=[];
     for(let r=0;r<5;r++) if(G[r].some(s=>s.id===S.fsym.id)) ewReels.push(r);
     if(ewReels.length>=3){
-      for(const r of ewReels){
-        G[r]=[S.fsym,S.fsym,S.fsym];
-        REELS[r].syms=[S.fsym,S.fsym,S.fsym];
-        REELS[r]._drawStatic(REELS[r].syms,0);
-        REELS[r].startWin([0,1,2]); /* visuell hervorheben */
-      }
+      for(const r of ewReels) G[r]=[S.fsym,S.fsym,S.fsym]; /* nur Logik-Daten */
+    }else{
+      ewReels=[];
     }
   }
 
@@ -173,9 +174,22 @@ function evalW(){
   if(tot>0){
     S.win=tot; S.bal+=tot;
     document.getElementById('dwin').classList.add('won');
-    /* Win-Sequenz NUR wenn kein Freispiel-Intro läuft */
-    if(!fsTrigger && typeof showWinSequence==='function'){
-      try{ showWinSequence(winData,tot); }catch(e){ console.error('WinSeq:',e); }
+  }
+
+  /* Rein visuell, blockiert nie das Spiel:
+     1) Falls Expanding Wild getriggert hat → erst die Morph-Animation abspielen
+     2) Danach (oder sofort, falls kein Expand) → normale Gewinnlinien-Sequenz */
+  if(!fsTrigger){
+    const runWinSeq=()=>{
+      if(tot>0 && typeof showWinSequence==='function'){
+        try{ showWinSequence(winData,tot); }catch(e){ console.error('WinSeq:',e); }
+      }
+    };
+    if(ewReels.length>=3 && typeof playExpandMorph==='function'){
+      try{ playExpandMorph(ewReels,S.fsym,runWinSeq); }
+      catch(e){ console.error('ExpandMorph:',e); runWinSeq(); }
+    }else{
+      runWinSeq();
     }
   }
 
