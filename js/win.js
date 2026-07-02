@@ -66,11 +66,13 @@ function _countUp(from,to,dur,cb){
 /* ── Win-Tier ── */
 function _tier(tot){
   const bet=S.ln*BETS[S.bi],x=tot/bet;
-  if(x>=200)return{label:'✦ LEGENDARY WIN ✦',coins:3,cls:'tier-legendary'};
-  if(x>=100)return{label:'✦ ULTRA WIN ✦',coins:3,cls:'tier-ultra'};
-  if(x>=50) return{label:'✦ SUPER WIN ✦',coins:2,cls:'tier-super'};
-  if(x>=20) return{label:'✦ MEGA WIN ✦',coins:2,cls:'tier-mega'};
-  if(x>=5)  return{label:'✦ BIG WIN ✦',coins:1,cls:'tier-big'};
+  /* coins = Anzahl gleichzeitiger Lottie-Instanzen (Münzregen-Intensität)
+     Ab Tier 2 (MEGA) explodiert die Zahl: 2→4→8→12→16 */
+  if(x>=200)return{label:'✦ LEGENDARY WIN ✦',coins:16,cls:'tier-legendary'};
+  if(x>=100)return{label:'✦ ULTRA WIN ✦',  coins:12,cls:'tier-ultra'};
+  if(x>=50) return{label:'✦ SUPER WIN ✦',  coins:8, cls:'tier-super'};
+  if(x>=20) return{label:'✦ MEGA WIN ✦',   coins:4, cls:'tier-mega'};
+  if(x>=5)  return{label:'✦ BIG WIN ✦',    coins:2, cls:'tier-big'};
   return{label:'',coins:1,cls:''};
 }
 
@@ -91,7 +93,9 @@ function showWinSequence(winData,tot){
   function doSkip(){
     if(!skipEnabled||_ws!==myWs)return;
     _ws++;skip.classList.remove('active');skip.onclick=null;
-    ctr.classList.remove('open');_clearCvs();_startLottie(tot);
+    ctr.classList.remove('open');_clearCvs();
+    const x=tot/(S.ln*BETS[S.bi]);
+    if(x>=5) _startLottie(tot);
   }
   skip.classList.add('active'); skip.onclick=doSkip;
 
@@ -106,7 +110,9 @@ function showWinSequence(winData,tot){
         if(_ws!==myWs)return;
         ctr.classList.remove('open');
         skip.classList.remove('active');skip.onclick=null;
-        _startLottie(tot);
+        /* Lottie-Overlay nur wenn Gewinn echte BIG-WIN-Schwelle erreicht (≥5× Einsatz) */
+        const x=tot/(S.ln*BETS[S.bi]);
+        if(x>=5) _startLottie(tot); /* BIG WIN oder höher */
       },300); return;
     }
     const wd=winData[idx++],prev=running; running+=wd.pay;
