@@ -73,6 +73,15 @@ function spin(){
     if(!S.fs)document.getElementById('fsb').style.display='none';
   }else S.bal-=bet;
   ui();
+  /* Firebase-Live-Gewichte übernehmen wenn verfügbar */
+  if(window.FB_STATE?.connected && window.FB_STATE.weights){
+    const fw = window.FB_STATE.weights;
+    SY.forEach(s=>{ if(fw[s.id]!==undefined) s.w=fw[s.id]; });
+  }
+
+  /* Firebase-Event prüfen */
+  const fbEvent = window.FB_STATE?.nextSpin || 'normal';
+
   /* Pre-generate all 5 results.
      Special symbols (book/exp/scarab/isis) may appear max ONCE per reel column. */
   const SPECIAL=new Set(['book','exp','scarab','isis']);
@@ -90,7 +99,38 @@ function spin(){
     }
     return col;
   }
-  const fg=Array.from({length:5},rndReel);
+  let fg;
+  if(fbEvent==='freeSpins'){
+    /* Freispiele erzwingen: 3 Bücher auf Walzen 0,2,4 in Reihe 1 */
+    fg=Array.from({length:5},rndReel);
+    fg[0][1]=SY.find(s=>s.id==='book');
+    fg[2][1]=SY.find(s=>s.id==='book');
+    fg[4][1]=SY.find(s=>s.id==='book');
+    if(window.FB_STATE) window.FB_STATE.nextSpin='normal';
+    if(window._fbRef) window._fbRef.update({nextSpin:'normal'});
+  } else if(fbEvent==='bigWin'){
+    /* Big Win: 5× Isis */
+    const isisSy=SY.find(s=>s.id==='isis');
+    fg=Array.from({length:5},()=>[isisSy,rnd(),rnd()]);
+    if(window.FB_STATE) window.FB_STATE.nextSpin='normal';
+    if(window._fbRef) window._fbRef.update({nextSpin:'normal'});
+  } else if(fbEvent==='jackpot'){
+    /* Jackpot: 5× Forscher */
+    const expSy=SY.find(s=>s.id==='exp');
+    fg=Array.from({length:5},()=>[expSy,rnd(),rnd()]);
+    if(window.FB_STATE) window.FB_STATE.nextSpin='normal';
+    if(window._fbRef) window._fbRef.update({nextSpin:'normal'});
+  } else if(fbEvent==='expandWild'){
+    /* Expanding Wild auf allen 5 Walzen */
+    const sym=window.FB_STATE?.forceWild
+      ? SY.find(s=>s.id===window.FB_STATE.forceWild)||SY[1]
+      : SY[1]; /* default: Forscher */
+    fg=Array.from({length:5},()=>[sym,sym,sym]);
+    if(window.FB_STATE) window.FB_STATE.nextSpin='normal';
+    if(window._fbRef) window._fbRef.update({nextSpin:'normal'});
+  } else {
+    fg=Array.from({length:5},rndReel);
+  }
   /* Start all reels fast simultaneously */
   REELS.forEach(rc=>rc.startFastSpin());
   /* After initial fast spin, chain the stops */
