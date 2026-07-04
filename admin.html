@@ -6,108 +6,117 @@
   <title>Book of Ra — Admin</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#0a0a0f;color:#e8d5a3;font-family:'Segoe UI',sans-serif;min-height:100vh;padding:0}
+    body{background:#0a0a0f;color:#e8d5a3;font-family:'Segoe UI',sans-serif;min-height:100vh}
 
-    /* Login */
     #login{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:1.2rem}
     #login h1{font-size:1.8rem;color:#ffd700;letter-spacing:.15em}
     #login input{background:#1a1a2e;border:1px solid #ffd70066;color:#fff;padding:.7em 1.2em;border-radius:.4em;font-size:1rem;width:260px;outline:none}
     #login input:focus{border-color:#ffd700}
     #login button{background:#ffd700;color:#000;border:none;padding:.7em 2em;border-radius:.4em;font-size:1rem;font-weight:700;cursor:pointer}
-    #login .err{color:#ff4444;font-size:.9rem;min-height:1.2em}
+    .err-msg{color:#ff4444;font-size:.9rem;min-height:1.2em}
 
-    /* Panel */
-    #panel{display:none;max-width:760px;margin:0 auto;padding:2rem 1rem 4rem}
-    #panel header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid #ffd70033}
-    #panel header h1{font-size:1.4rem;color:#ffd700;letter-spacing:.1em}
-    #conn{font-size:.8rem;padding:.25em .7em;border-radius:2em;background:#333}
+    #panel{display:none;max-width:740px;margin:0 auto;padding:2rem 1rem 4rem}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid #ffd70033}
+    header h1{font-size:1.3rem;color:#ffd700;letter-spacing:.1em}
+    #conn{font-size:.8rem;padding:.25em .75em;border-radius:2em;background:#333;transition:background .3s}
     #conn.ok{background:#1a4a1a;color:#4dff4d}
     #conn.err{background:#4a1a1a;color:#ff4d4d}
 
-    /* Cards */
-    .card{background:#111122;border:1px solid #ffd70022;border-radius:.6em;padding:1.4rem;margin-bottom:1.4rem}
-    .card h2{font-size:.95rem;color:#ffd700;letter-spacing:.1em;margin-bottom:1.1rem;text-transform:uppercase}
+    .card{background:#111122;border:1px solid #ffd70022;border-radius:.7em;padding:1.4rem;margin-bottom:1.4rem}
+    .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem}
+    .card h2{font-size:.9rem;color:#ffd700;letter-spacing:.1em;text-transform:uppercase}
 
-    /* Sliders */
-    .sym-row{display:flex;align-items:center;gap:.8rem;margin-bottom:.7rem}
-    .sym-row label{width:80px;font-size:.85rem;color:#c8b080}
-    .sym-row input[type=range]{flex:1;accent-color:#ffd700;height:4px}
-    .sym-row .val{width:36px;text-align:right;font-size:.9rem;color:#fff;font-weight:700}
-    .sym-row .pct{width:44px;text-align:right;font-size:.75rem;color:#888}
+    .sym-row{display:grid;grid-template-columns:110px 1fr 38px 52px;align-items:center;gap:.6rem;margin-bottom:.6rem}
+    .sym-row label{font-size:.83rem;color:#c8b080}
+    .sym-row input[type=range]{accent-color:#ffd700;cursor:pointer}
+    .sym-row .val{text-align:right;font-size:.9rem;color:#fff;font-weight:700}
+    .sym-row .pct{text-align:right;font-size:.75rem;color:#888}
 
-    /* Buttons */
-    .btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
-    .btn{border:none;padding:.85em 1em;border-radius:.45em;font-size:.92rem;font-weight:700;cursor:pointer;letter-spacing:.05em;transition:transform .1s,opacity .1s}
-    .btn:active{transform:scale(.96);opacity:.85}
-    .btn-green {background:#1a6a1a;color:#4dff88;border:1px solid #4dff8844}
-    .btn-gold  {background:#6a4a00;color:#ffd700;border:1px solid #ffd70044}
-    .btn-purple{background:#3a0a6a;color:#cc88ff;border:1px solid #cc88ff44}
-    .btn-red   {background:#6a0a0a;color:#ff6666;border:1px solid #ff666644}
-    .btn-blue  {background:#0a2a6a;color:#66aaff;border:1px solid #66aaff44}
-    .btn-full  {grid-column:1/-1}
+    .btn{border:none;padding:.8em 1em;border-radius:.45em;font-size:.9rem;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:transform .1s,filter .1s;width:100%}
+    .btn:hover{filter:brightness(1.15)}
+    .btn:active{transform:scale(.96)}
+    .btn-sm{padding:.5em .9em;font-size:.82rem;width:auto}
+    .btn-reset{background:#2a1a00;color:#ffaa44;border:1px solid #ffaa4444}
+    .btn-green {background:#0d3d1a;color:#44ff88;border:1px solid #44ff8844}
+    .btn-gold  {background:#3d2a00;color:#ffd700;border:1px solid #ffd70044}
+    .btn-purple{background:#2a0d3d;color:#cc88ff;border:1px solid #cc88ff44}
+    .btn-red   {background:#3d0d0d;color:#ff6666;border:1px solid #ff666644}
 
-    /* Status */
-    #status{text-align:center;font-size:.85rem;color:#888;min-height:1.4em;margin-top:1rem}
-    #status.ok{color:#4dff88} #status.err{color:#ff4444}
+    .evt-grid{display:flex;flex-direction:column;gap:.75rem}
 
-    /* Reset */
-    .small{font-size:.78rem;color:#666;margin-top:.5rem;text-align:center}
+    #symPickerWrap{display:none;margin-top:.8rem;padding:.9rem;background:#0a0a1a;border-radius:.5em;border:1px solid #ffd70022}
+    #symPickerWrap label{display:block;font-size:.8rem;color:#888;margin-bottom:.5rem}
+    #symPicker{display:flex;flex-wrap:wrap;gap:.5rem}
+    .sym-opt{background:#1a1a2e;border:1px solid #ffd70033;color:#e8d5a3;padding:.4em .8em;border-radius:.3em;cursor:pointer;font-size:.85rem;transition:background .15s}
+    .sym-opt:hover{background:#2a2a4e}
+    .sym-opt.active{background:#3d2a00;border-color:#ffd700;color:#ffd700}
+
+    #status{text-align:center;font-size:.85rem;color:#888;min-height:1.4em;margin-top:.8rem;transition:color .2s}
+    #status.ok{color:#44ff88}
+    #status.fail{color:#ff4444}
   </style>
 </head>
 <body>
 
-<!-- Login -->
 <div id="login">
   <h1>⚙ ADMIN</h1>
-  <input type="password" id="pw" placeholder="Passwort" onkeydown="if(event.key==='Enter')doLogin()">
+  <input type="password" id="pw" placeholder="Passwort"
+         onkeydown="if(event.key==='Enter')doLogin()">
   <button onclick="doLogin()">Einloggen</button>
-  <div class="err" id="loginErr"></div>
+  <div class="err-msg" id="loginErr"></div>
 </div>
 
-<!-- Admin Panel -->
 <div id="panel">
   <header>
     <h1>📊 Book of Ra — Admin</h1>
     <span id="conn" class="err">⬤ Offline</span>
   </header>
 
-  <!-- Symbol-Gewichte -->
   <div class="card">
-    <h2>🎰 Symbol-Gewichte (Wahrscheinlichkeit)</h2>
+    <div class="card-header">
+      <h2>🎰 Symbol-Wahrscheinlichkeiten</h2>
+      <button class="btn btn-sm btn-reset" onclick="resetWeights()">↺ Reset</button>
+    </div>
     <div id="sliders"></div>
-    <div class="small">Gesamtgewicht: <span id="totalW">0</span> | Änderungen werden sofort auf alle Spiele übertragen</div>
-  </div>
-
-  <!-- Events -->
-  <div class="card">
-    <h2>⚡ Nächster Spin (Event)</h2>
-    <div class="btn-grid">
-      <button class="btn btn-green" onclick="setEvent('normal')">🎲 Normal</button>
-      <button class="btn btn-gold"  onclick="setEvent('freeSpins')">✨ Freispiele erzwingen</button>
-      <button class="btn btn-purple" onclick="setEvent('bigWin')">💰 Big Win erzwingen</button>
-      <button class="btn btn-blue"  onclick="setEvent('expandWild')">🌟 Expanding Wild</button>
-      <button class="btn btn-red btn-full" onclick="setEvent('jackpot')">🏆 JACKPOT (5× Forscher)</button>
+    <div style="text-align:right;font-size:.75rem;color:#555;margin-top:.4rem">
+      Summe immer 100% · Schieber passen sich automatisch an
     </div>
   </div>
 
-  <!-- Schnell-Presets -->
   <div class="card">
-    <h2>🎛 Schnell-Presets</h2>
-    <div class="btn-grid">
-      <button class="btn btn-gold"  onclick="applyPreset('original')">📋 Original RTP (~93%)</button>
-      <button class="btn btn-green" onclick="applyPreset('hot')">🔥 Heißlauf (RTP 120%)</button>
-      <button class="btn btn-red"   onclick="applyPreset('cold')">🧊 Kaltlauf (RTP 60%)</button>
-      <button class="btn btn-purple" onclick="applyPreset('highroller')">💎 High Roller (selten aber groß)</button>
+    <h2 style="margin-bottom:1rem">⚡ Nächster Spin</h2>
+    <div class="evt-grid">
+
+      <button class="btn btn-green" onclick="setEvent('normal')">
+        🎲 Normal (kein Event aktiv)
+      </button>
+
+      <button class="btn btn-gold" onclick="setEvent('threeBooks')">
+        📖 3 Bücher — zufällig auf 3 zufälligen Walzen / Reihen
+      </button>
+
+      <div>
+        <button class="btn btn-purple" onclick="toggleSymPicker()">
+          🌟 Ganzer Spin = bestimmtes Symbol ▾
+        </button>
+        <div id="symPickerWrap">
+          <label>Symbol auswählen:</label>
+          <div id="symPicker"></div>
+        </div>
+      </div>
+
+      <button class="btn btn-red" onclick="setEvent('legendary')">
+        🏆 Zufällig aussehender Legendary Win
+      </button>
+
     </div>
   </div>
 
   <div id="status"></div>
 </div>
 
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <script>
 const FIREBASE_CFG = {
   apiKey:            "AIzaSyDIbryLvdVvLnsCH72fmNQd_yCTNJdGAsA",
@@ -118,142 +127,176 @@ const FIREBASE_CFG = {
   messagingSenderId: "945474695262",
   appId:             "1:945474695262:web:417b17edc298df232c04cf"
 };
-
-const ADMIN_PASSWORD = "bora2024admin";
+const ADMIN_PW = "bora2024admin";
 
 const SYMBOLS = [
-  {id:'book',  label:'📖 Buch',       def:2},
-  {id:'exp',   label:'🧭 Forscher',   def:3},
-  {id:'isis',  label:'👸 Isis',       def:4},
-  {id:'scarab',label:'🪲 Skarabäus',  def:5},
-  {id:'A',     label:'🃏 Ass',        def:6},
-  {id:'K',     label:'🃏 König',      def:7},
-  {id:'Q',     label:'🃏 Dame',       def:9},
-  {id:'J',     label:'🃏 Bube',       def:11},
-  {id:'ten',   label:'🃏 10',         def:18},
+  {id:'book',  label:'📖 Buch',      def:2},
+  {id:'exp',   label:'🧭 Forscher',  def:3},
+  {id:'isis',  label:'👸 Isis',      def:4},
+  {id:'scarab',label:'🪲 Skarabäus', def:5},
+  {id:'A',     label:'🃏 Ass',       def:6},
+  {id:'K',     label:'🃏 König',     def:7},
+  {id:'Q',     label:'🃏 Dame',      def:9},
+  {id:'J',     label:'🃏 Bube',      def:11},
+  {id:'ten',   label:'🃏 10',        def:18},
 ];
+const DEFAULT_W = {};
+SYMBOLS.forEach(s => DEFAULT_W[s.id] = s.def);
 
-const PRESETS = {
-  original:   {book:2,exp:3,isis:4,scarab:5,A:6,K:7,Q:9,J:11,ten:18},
-  hot:        {book:4,exp:6,isis:7,scarab:8,A:6,K:7,Q:9,J:11,ten:10},
-  cold:       {book:1,exp:2,isis:3,scarab:3,A:6,K:7,Q:9,J:11,ten:28},
-  highroller: {book:1,exp:2,isis:2,scarab:3,A:5,K:6,Q:8,J:10,ten:15},
-};
+let db, ref;
+let W = {...DEFAULT_W};
+let forceSym = null;
 
-let db, ref, currentWeights = {};
-SYMBOLS.forEach(s => currentWeights[s.id] = s.def);
-
-/* ── Login ── */
-function doLogin(){
-  const pw = document.getElementById('pw').value;
-  if(pw !== ADMIN_PASSWORD){
+function doLogin() {
+  if (document.getElementById('pw').value !== ADMIN_PW) {
     document.getElementById('loginErr').textContent = 'Falsches Passwort';
     return;
   }
   document.getElementById('login').style.display = 'none';
   document.getElementById('panel').style.display = 'block';
-  initFirebase();
   buildSliders();
+  buildSymPicker();
+  initFirebase();
 }
 
-/* ── Firebase ── */
-function initFirebase(){
+function initFirebase() {
   firebase.initializeApp(FIREBASE_CFG);
   db  = firebase.database();
-  ref = db.ref("gameConfig");
+  ref = db.ref('gameConfig');
 
-  ref.on("value", snap => {
-    const d = snap.val();
+  ref.once('value').then(snap => {
+    if (!snap.exists()) ref.set({ weights: DEFAULT_W, nextSpin: 'normal', forceWild: null });
+  });
+
+  ref.on('value', snap => {
     document.getElementById('conn').textContent = '⬤ Live';
     document.getElementById('conn').className   = 'ok';
-    if(d?.weights){
-      currentWeights = {...currentWeights, ...d.weights};
-      updateSliders();
-    }
+    const d = snap.val();
+    if (d?.weights) { W = {...DEFAULT_W, ...d.weights}; renderSliders(); }
   }, () => {
     document.getElementById('conn').textContent = '⬤ Offline';
     document.getElementById('conn').className   = 'err';
   });
 }
 
-/* ── Sliders bauen ── */
-function buildSliders(){
-  const cont = document.getElementById('sliders');
-  cont.innerHTML = '';
-  SYMBOLS.forEach(sym => {
+function buildSliders() {
+  const c = document.getElementById('sliders');
+  c.innerHTML = '';
+  SYMBOLS.forEach(s => {
     const row = document.createElement('div');
     row.className = 'sym-row';
     row.innerHTML = `
-      <label>${sym.label}</label>
-      <input type="range" min="1" max="40" value="${currentWeights[sym.id]||sym.def}"
-             id="sl_${sym.id}" oninput="onSlider('${sym.id}',this.value)">
-      <span class="val" id="vl_${sym.id}">${currentWeights[sym.id]||sym.def}</span>
-      <span class="pct" id="pc_${sym.id}"></span>`;
-    cont.appendChild(row);
+      <label>${s.label}</label>
+      <input type="range" id="sl_${s.id}" min="1" max="60" value="${W[s.id]}"
+             oninput="moveSlider('${s.id}',+this.value)">
+      <span class="val" id="vl_${s.id}">${W[s.id]}</span>
+      <span class="pct" id="pc_${s.id}"></span>`;
+    c.appendChild(row);
   });
   recalcPct();
 }
 
-function updateSliders(){
+function renderSliders() {
   SYMBOLS.forEach(s => {
-    const el = document.getElementById('sl_'+s.id);
+    const sl = document.getElementById('sl_'+s.id);
     const vl = document.getElementById('vl_'+s.id);
-    if(el){ el.value = currentWeights[s.id]; vl.textContent = currentWeights[s.id]; }
+    if (sl) { sl.value = W[s.id]; vl.textContent = W[s.id]; }
   });
   recalcPct();
 }
 
-function onSlider(id, val){
-  val = parseInt(val);
-  currentWeights[id] = val;
-  document.getElementById('vl_'+id).textContent = val;
-  recalcPct();
+function moveSlider(id, newVal) {
+  const oldVal = W[id];
+  const delta  = newVal - oldVal;
+  if (delta === 0) return;
+
+  const othersTotal = SYMBOLS.reduce((sum, s) => s.id===id ? sum : sum+W[s.id], 0);
+  if (othersTotal <= 0) return;
+
+  SYMBOLS.forEach(s => {
+    if (s.id === id) return;
+    const adj = W[s.id] - delta * (W[s.id] / othersTotal);
+    W[s.id] = Math.max(1, Math.round(adj));
+  });
+  W[id] = newVal;
+
+  renderSliders();
   pushWeights();
 }
 
-function recalcPct(){
-  const total = Object.values(currentWeights).reduce((a,b)=>a+b,0);
-  document.getElementById('totalW').textContent = total;
+function recalcPct() {
+  const total = SYMBOLS.reduce((s,sym) => s+W[sym.id], 0);
   SYMBOLS.forEach(s => {
     const el = document.getElementById('pc_'+s.id);
-    if(el) el.textContent = (currentWeights[s.id]/total*100).toFixed(1)+'%';
+    if (el) el.textContent = (W[s.id]/total*100).toFixed(1)+'%';
   });
 }
 
-/* ── Push to Firebase ── */
-let _pushTimer = null;
-function pushWeights(){
-  clearTimeout(_pushTimer);
-  _pushTimer = setTimeout(()=>{
-    if(!ref) return;
-    ref.update({weights: currentWeights})
-      .then(()=>showStatus('✓ Gewichte gespeichert','ok'))
-      .catch(e=>showStatus('❌ '+e.message,'err'));
-  }, 400);
+function resetWeights() {
+  W = {...DEFAULT_W};
+  renderSliders();
+  if (ref) ref.update({weights: W})
+    .then(() => showStatus('✓ Auf Original zurückgesetzt','ok'))
+    .catch(e => showStatus('❌ '+e.message,'fail'));
 }
 
-function setEvent(type){
-  if(!ref){ showStatus('❌ Nicht verbunden','err'); return; }
-  ref.update({nextSpin: type})
-    .then(()=>showStatus(`✓ Nächster Spin: ${type}`,'ok'))
-    .catch(e=>showStatus('❌ '+e.message,'err'));
-  /* Event nach 1 Spin automatisch zurücksetzen */
-  setTimeout(()=>ref.update({nextSpin:'normal'}), 8000);
+let _pt = null;
+function pushWeights() {
+  clearTimeout(_pt);
+  _pt = setTimeout(() => {
+    if (!ref) return;
+    ref.update({weights: W})
+      .then(() => showStatus('✓ Live übertragen','ok'))
+      .catch(e => showStatus('❌ '+e.message,'fail'));
+  }, 350);
 }
 
-function applyPreset(name){
-  if(!PRESETS[name]) return;
-  currentWeights = {...PRESETS[name]};
-  updateSliders();
-  if(ref) ref.update({weights: currentWeights})
-    .then(()=>showStatus(`✓ Preset "${name}" aktiv`,'ok'))
-    .catch(e=>showStatus('❌ '+e.message,'err'));
+function setEvent(type) {
+  if (!ref) { showStatus('❌ Nicht verbunden','fail'); return; }
+  const payload = { nextSpin: type, forceWild: forceSym };
+
+  if (type === 'forceSym') {
+    if (!forceSym) { showStatus('Bitte erst Symbol auswählen','fail'); return; }
+    payload.forceWild = forceSym;
+  }
+
+  ref.update(payload)
+    .then(() => showStatus(`✓ Event gesetzt: ${type}`,'ok'))
+    .catch(e => showStatus('❌ '+e.message,'fail'));
+
+  if (type !== 'normal') setTimeout(() => ref?.update({nextSpin:'normal',forceWild:null}), 12000);
 }
 
-function showStatus(msg, cls){
+function buildSymPicker() {
+  const wrap = document.getElementById('symPicker');
+  SYMBOLS.filter(s => s.id !== 'book').forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'sym-opt';
+    btn.textContent = s.label;
+    btn.dataset.id  = s.id;
+    btn.onclick = () => selectSym(s.id, btn);
+    wrap.appendChild(btn);
+  });
+}
+
+function toggleSymPicker() {
+  const w = document.getElementById('symPickerWrap');
+  w.style.display = w.style.display === 'block' ? 'none' : 'block';
+}
+
+function selectSym(id, btn) {
+  document.querySelectorAll('.sym-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  forceSym = id;
+  setEvent('forceSym');
+}
+
+function showStatus(msg, cls) {
   const el = document.getElementById('status');
-  el.textContent = msg; el.className = cls;
-  setTimeout(()=>{ el.textContent=''; el.className=''; }, 3000);
+  el.textContent = msg;
+  el.className = cls;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.textContent=''; el.className=''; }, 3000);
 }
 </script>
 </body>
