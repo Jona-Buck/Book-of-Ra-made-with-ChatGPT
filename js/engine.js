@@ -100,34 +100,36 @@ function spin(){
     return col;
   }
   let fg;
-  if(fbEvent==='freeSpins'){
-    /* Freispiele erzwingen: 3 Bücher auf Walzen 0,2,4 in Reihe 1 */
+  const _fbReset=()=>{
+    if(window.FB_STATE) window.FB_STATE.nextSpin='normal';
+    if(window._fbRef) window._fbRef.update({nextSpin:'normal',forceWild:null});
+  };
+
+  if(fbEvent==='threeBooks'){
+    /* 3 Bücher auf 3 zufälligen Walzen / zufälligen Reihen — Rest normal */
     fg=Array.from({length:5},rndReel);
-    fg[0][1]=SY.find(s=>s.id==='book');
-    fg[2][1]=SY.find(s=>s.id==='book');
-    fg[4][1]=SY.find(s=>s.id==='book');
-    if(window.FB_STATE) window.FB_STATE.nextSpin='normal';
-    if(window._fbRef) window._fbRef.update({nextSpin:'normal'});
-  } else if(fbEvent==='bigWin'){
-    /* Big Win: 5× Isis */
-    const isisSy=SY.find(s=>s.id==='isis');
-    fg=Array.from({length:5},()=>[isisSy,rnd(),rnd()]);
-    if(window.FB_STATE) window.FB_STATE.nextSpin='normal';
-    if(window._fbRef) window._fbRef.update({nextSpin:'normal'});
-  } else if(fbEvent==='jackpot'){
-    /* Jackpot: 5× Forscher */
-    const expSy=SY.find(s=>s.id==='exp');
-    fg=Array.from({length:5},()=>[expSy,rnd(),rnd()]);
-    if(window.FB_STATE) window.FB_STATE.nextSpin='normal';
-    if(window._fbRef) window._fbRef.update({nextSpin:'normal'});
-  } else if(fbEvent==='expandWild'){
-    /* Expanding Wild auf allen 5 Walzen */
-    const sym=window.FB_STATE?.forceWild
-      ? SY.find(s=>s.id===window.FB_STATE.forceWild)||SY[1]
-      : SY[1]; /* default: Forscher */
+    const bookSy=SY.find(s=>s.id==='book');
+    const reels=[0,1,2,3,4].sort(()=>Math.random()-.5).slice(0,3);
+    reels.forEach(r=>{ const row=Math.floor(Math.random()*3); fg[r][row]=bookSy; });
+    _fbReset();
+
+  } else if(fbEvent==='forceSym'){
+    /* Ganzer Spin = ein bestimmtes Symbol auf allen 5 Walzen, alle 3 Reihen */
+    const symId=window.FB_STATE?.forceWild||'exp';
+    const sym=SY.find(s=>s.id===symId)||SY[1];
     fg=Array.from({length:5},()=>[sym,sym,sym]);
-    if(window.FB_STATE) window.FB_STATE.nextSpin='normal';
-    if(window._fbRef) window._fbRef.update({nextSpin:'normal'});
+    _fbReset();
+
+  } else if(fbEvent==='legendary'){
+    /* Zufällig aussehender Legendary Win:
+       Hauptlinie (Reihe 1) = 5× zufälliges Premium-Symbol, Rest normal */
+    const premiums=SY.filter(s=>!['A','K','Q','J','ten','book'].includes(s.id));
+    const hero=premiums[Math.floor(Math.random()*premiums.length)];
+    fg=Array.from({length:5},rndReel);
+    fg.forEach(col=>col[1]=hero);
+    [0,4].forEach(r=>{ if(Math.random()>.4) fg[r][Math.random()>.5?0:2]=hero; });
+    _fbReset();
+
   } else {
     fg=Array.from({length:5},rndReel);
   }
