@@ -35,6 +35,7 @@ document.getElementById('gmx').onclick=closeGm;
 document.getElementById('fsok').onclick=()=>{
   document.getElementById('fsov').classList.remove('open');
   document.getElementById('fsb').style.display='block';
+  if(typeof endVisual==='function') endVisual();
 };
 document.getElementById('snd').onclick=function(){
   this.style.color=(this.style.color==='#F0CB50')?'':'#F0CB50';
