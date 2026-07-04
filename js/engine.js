@@ -237,9 +237,22 @@ function evalW(){
 
   if(S.auto&&S.aN>0){
     S.aN--;
-    if(S.aN>0&&S.bal>=S.ln*BETS[S.bi]) setTimeout(spin,tot>0&&!fsTrigger?3200:550);
+    if(S.aN>0&&S.bal>=S.ln*BETS[S.bi]) scheduleNextAutoSpin();
     else{ S.auto=false; document.getElementById('auto').classList.remove('on'); }
   }
+}
+
+/* Wartet bis alle laufenden visuellen Sequenzen (Gewinnlinien, Expand-Morph,
+   Freispiel-Intro) wirklich fertig sind, statt mit geraten Zeiten zu arbeiten.
+   Das behebt Überlappungen zwischen Autoplay und Animationen, und pausiert
+   Autoplay korrekt solange der Spieler noch den Freispiel-Intro bestätigen muss. */
+function scheduleNextAutoSpin(){
+  const check=()=>{
+    if(!S.auto)return; /* Spieler hat Autoplay zwischenzeitlich gestoppt */
+    if((window._visualsBusy||0)>0){ setTimeout(check,150); return; }
+    setTimeout(spin,400); /* kleiner Puffer nach Ende der letzten Animation */
+  };
+  setTimeout(check,150);
 }
 
 /* ── GAMBLE ── */
