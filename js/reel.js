@@ -239,6 +239,10 @@ class RC{
    (wie umblätternde Buchseiten). Ruft allDone() erst auf, wenn wirklich alles fertig ist. */
 function playExpandMorph(reelIdxs,fsym,allDone){
   if(reelIdxs.length===0){ allDone(); return; }
+  if(typeof beginVisual==='function') beginVisual();
+  let _ended=false;
+  const _finish=()=>{ if(_ended)return; _ended=true; if(typeof endVisual==='function') endVisual(); allDone(); };
+
   const ROW_STAGGER=90, MORPH_DUR=260, REEL_GAP=120;
   const perReelTime=ROW_STAGGER*2+MORPH_DUR; /* letzte Reihe startet bei 2*stagger, läuft MORPH_DUR */
 
@@ -255,7 +259,7 @@ function playExpandMorph(reelIdxs,fsym,allDone){
         reelIdxs.forEach(ri=>REELS[ri].startWin([0,1,2]));
         setTimeout(()=>{
           reelIdxs.forEach(ri=>REELS[ri].clearWin());
-          allDone();
+          _finish();
         },500);
       },perReelTime+60);
     }
