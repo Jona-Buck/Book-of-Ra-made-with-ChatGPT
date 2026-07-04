@@ -79,6 +79,13 @@ function _tier(tot){
 /* ── Hauptfunktion ── */
 function showWinSequence(winData,tot){
   _ws++;const myWs=_ws;
+  if(typeof beginVisual==='function') beginVisual();
+  let _visualEnded=false;
+  const _finishVisual=()=>{
+    if(_visualEnded)return; _visualEnded=true;
+    if(typeof endVisual==='function') endVisual();
+  };
+
   const ro=document.getElementById('ro').getBoundingClientRect();
   _sizeCvs(ro);
 
@@ -95,7 +102,7 @@ function showWinSequence(winData,tot){
     _ws++;skip.classList.remove('active');skip.onclick=null;
     ctr.classList.remove('open');_clearCvs();
     const x=tot/(S.ln*BETS[S.bi]);
-    if(x>=5) _startLottie(tot);
+    if(x>=5) _startLottie(tot,_finishVisual); else _finishVisual();
   }
   skip.classList.add('active'); skip.onclick=doSkip;
 
@@ -103,16 +110,16 @@ function showWinSequence(winData,tot){
      übereinander, damit sich Glow-Schichten an Kreuzungspunkten nicht aufsummieren. */
   let idx=0,running=0;
   function next(){
-    if(_ws!==myWs){ctr.classList.remove('open');_clearCvs();skip.classList.remove('active');return;}
+    if(_ws!==myWs){ctr.classList.remove('open');_clearCvs();skip.classList.remove('active');_finishVisual();return;}
     if(idx>=winData.length){
       _clearCvs();
       setTimeout(()=>{
-        if(_ws!==myWs)return;
+        if(_ws!==myWs){_finishVisual();return;}
         ctr.classList.remove('open');
         skip.classList.remove('active');skip.onclick=null;
         /* Lottie-Overlay nur wenn Gewinn echte BIG-WIN-Schwelle erreicht (≥5× Einsatz) */
         const x=tot/(S.ln*BETS[S.bi]);
-        if(x>=5) _startLottie(tot); /* BIG WIN oder höher */
+        if(x>=5) _startLottie(tot,_finishVisual); else _finishVisual(); /* BIG WIN oder höher */
       },300); return;
     }
     const wd=winData[idx++],prev=running; running+=wd.pay;
@@ -125,9 +132,9 @@ function showWinSequence(winData,tot){
 
 /* ── Lottie-Overlay mit Tier + Gewinnbetrag ── */
 let _lC=null,_lL=null;
-function _startLottie(tot){
+function _startLottie(tot,onDone){
   const ov=document.getElementById('bigwinov');
-  if(!ov)return;
+  if(!ov){ if(onDone)onDone(); return; }
   const tier=_tier(tot);
   const cDiv=document.getElementById('bigwin-coins');
   const lDiv=document.getElementById('bigwin-light');
@@ -159,12 +166,14 @@ function _startLottie(tot){
   /* Gewinnbetrag hochzählen */
   setTimeout(()=>_countUp(0,tot,1200,v=>amtEl.textContent=fmt(v)+' €'),300);
 
-  /* Schließen */
+  /* Schließen — Guard gegen Doppelaufruf (Klick UND Timeout können beide feuern) */
+  let _closed=false;
   function close(){
-    if(!ov.classList.contains('open'))return;
+    if(_closed)return; _closed=true;
     ov.classList.remove('open');ov.onclick=null;
     if(_lC){_lC.destroy();_lC=null;}if(_lL){_lL.destroy();_lL=null;}
     cDiv.innerHTML='';
+    if(onDone)onDone();
   }
   ov.onclick=close;
   const dur=tier.coins>=3?4000:tier.coins>=2?3200:2500;
