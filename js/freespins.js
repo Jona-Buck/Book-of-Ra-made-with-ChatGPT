@@ -30,6 +30,12 @@ function playFsIntro(){
   const num=document.getElementById('fsnum');
   const card=document.getElementById('fsflipcard');
 
+  /* Als "beschäftigt" markieren solange das Intro-Overlay auf den manuellen
+     "STARTEN"-Klick wartet (siehe ui.js #fsok). Dadurch pausiert Autoplay
+     korrekt, statt im Hintergrund weiterzuspinnen während der Spieler
+     noch das Freispiel-Intro vor sich hat. */
+  if(typeof beginVisual==='function') beginVisual();
+
   /* Reset state */
   num.textContent='0';
   card.classList.remove('revealed');
