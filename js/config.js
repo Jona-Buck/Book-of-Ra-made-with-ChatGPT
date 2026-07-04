@@ -21,5 +21,13 @@ const BETS=[.1,.2,.5,1,2,5,10],DUR=[1050,1300,1580,1880,2200],FILL=15;
 let G=[];
 const S={bal:1000,win:0,ln:10,bi:3,sp:false,fs:0,fsym:null,auto:false,aN:0};
 
+/* ── Visuals-Busy-Zähler ──
+   Jede rein visuelle Sequenz (Gewinnlinien, Expand-Wild-Morph, Freispiel-Intro)
+   zählt hier hoch/runter. Autoplay wartet bis dieser Zähler wieder 0 ist,
+   statt mit geraten Zeiten zu arbeiten — verhindert Überlappungen/Bugs. */
+window._visualsBusy=0;
+function beginVisual(){window._visualsBusy++;}
+function endVisual(){window._visualsBusy=Math.max(0,window._visualsBusy-1);}
+
 /* ── Pre-load all symbol images into Image objects ── */
 const PIMG={};
