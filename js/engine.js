@@ -19,6 +19,7 @@ function ui(){
   document.getElementById('dbal').textContent=fmt(S.bal);
   document.getElementById('dwin').textContent=fmt(S.win);
   document.getElementById('dbt').textContent=fmt(tot);
+  if(typeof saveBalance==='function') saveBalance(S.bal);
 }
 function flashE(id){const e=document.getElementById(id);e.classList.add('err');setTimeout(()=>e.classList.remove('err'),500);}
 
@@ -60,7 +61,12 @@ function chainStop(r,fg,done){
 function spin(){
   if(S.sp)return;
   const bet=S.ln*BETS[S.bi];
-  if(!S.fs&&S.bal<bet){flashE('dbal');return;}
+  if(!S.fs&&S.bal<bet){
+    flashE('dbal');
+    if(S.auto){ S.auto=false; document.getElementById('auto').classList.remove('on'); }
+    showBrokeModal();
+    return;
+  }
   S.sp=true;S.win=0;
   document.getElementById('dwin').classList.remove('won');
   document.getElementById('spin').disabled=true;
@@ -238,8 +244,42 @@ function evalW(){
   if(S.auto&&S.aN>0){
     S.aN--;
     if(S.aN>0&&S.bal>=S.ln*BETS[S.bi]) scheduleNextAutoSpin();
-    else{ S.auto=false; document.getElementById('auto').classList.remove('on'); }
+    else{
+      S.auto=false; document.getElementById('auto').classList.remove('on');
+      if(S.bal<S.ln*BETS[S.bi]) showBrokeModal();
+    }
   }
+}
+
+/* ── Pleite-Hinweis ──
+   Erscheint sobald der aktuelle Einsatz das Guthaben übersteigt (auch bei
+   niedrigster Einsatzstufe = "wirklich pleite"). Bietet Reset auf Startguthaben an. */
+function showBrokeModal(){
+  let ov=document.getElementById('brokeov');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='brokeov';
+    ov.className='ov';
+    ov.innerHTML=`
+      <div id="brokebox">
+        <div id="brokeicon">💸</div>
+        <div id="broketitle">Guthaben aufgebraucht</div>
+        <div id="brokemsg">Dein Einsatz übersteigt dein aktuelles Guthaben.<br>Möchtest du dein Guthaben zurücksetzen?</div>
+        <div id="brokebtns">
+          <button id="brokeCancel" class="brokebtn brokebtn-no">Abbrechen</button>
+          <button id="brokeReset" class="brokebtn brokebtn-yes">Zurücksetzen</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.getElementById('brokeCancel').onclick=()=>ov.classList.remove('open');
+    document.getElementById('brokeReset').onclick=()=>{
+      S.bal=1000;
+      ui();
+      if(typeof saveBalance==='function') saveBalance(S.bal);
+      ov.classList.remove('open');
+    };
+  }
+  ov.classList.add('open');
 }
 
 /* Wartet bis alle laufenden visuellen Sequenzen (Gewinnlinien, Expand-Morph,
