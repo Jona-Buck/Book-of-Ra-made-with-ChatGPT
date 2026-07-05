@@ -372,3 +372,26 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
 .brokebtn-no{background:#332822;color:#C8B8A0;border:1px solid #55483C}
 .brokebtn-yes{background:linear-gradient(160deg,#FFD23C,#C89020);color:#241800}
 .brokebtn-yes:hover{filter:brightness(1.1)}
+
+/* ── Namensabfrage-Modal (erster Besuch) ── */
+#namebox{
+  background:linear-gradient(160deg,#1C1208,#0A0600);
+  border:1.5px solid #C8A030;border-radius:10px;
+  padding:2rem 1.6rem;max-width:340px;text-align:center;
+  box-shadow:0 8px 32px rgba(0,0,0,.7);
+}
+#nameicon{font-size:2.6rem;margin-bottom:.5rem}
+#nametitle{
+  font-size:1.15rem;font-weight:700;color:#FFD23C;
+  letter-spacing:.03em;margin-bottom:.4rem;
+}
+#namemsg{
+  font-size:.9rem;color:#E8E4D8;line-height:1.5;margin-bottom:1rem;
+}
+#nameinput{
+  width:100%;background:#241A10;border:1px solid #55483C;border-radius:6px;
+  color:#fff;padding:.7em 1em;font-size:1rem;margin-bottom:1.2rem;
+  outline:none;text-align:center;box-sizing:border-box;
+}
+#nameinput:focus{border-color:#FFD23C}
+#namebtns{display:flex;gap:.7rem;justify-content:center}
