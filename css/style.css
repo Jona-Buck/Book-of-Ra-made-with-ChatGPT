@@ -346,3 +346,29 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
   from{transform:scale(1);}
   to{transform:scale(1.04);text-shadow:0 0 50px #ffd700,0 0 100px #ff8c00,0 3px 0 rgba(0,0,0,.5);}
 }
+
+/* ── Pleite-Modal ── */
+#brokebox{
+  background:linear-gradient(160deg,#1C1208,#0A0600);
+  border:1.5px solid #C8A030;border-radius:10px;
+  padding:2rem 1.6rem;max-width:340px;text-align:center;
+  box-shadow:0 8px 32px rgba(0,0,0,.7);
+}
+#brokeicon{font-size:2.6rem;margin-bottom:.5rem}
+#broketitle{
+  font-size:1.15rem;font-weight:700;color:#FFD23C;
+  letter-spacing:.03em;margin-bottom:.7rem;
+}
+#brokemsg{
+  font-size:.9rem;color:#E8E4D8;line-height:1.5;margin-bottom:1.4rem;
+}
+#brokebtns{display:flex;gap:.7rem;justify-content:center}
+.brokebtn{
+  border:none;border-radius:6px;padding:.65em 1.3em;
+  font-size:.88rem;font-weight:700;cursor:pointer;letter-spacing:.03em;
+  transition:transform .1s,filter .1s;
+}
+.brokebtn:active{transform:scale(.95)}
+.brokebtn-no{background:#332822;color:#C8B8A0;border:1px solid #55483C}
+.brokebtn-yes{background:linear-gradient(160deg,#FFD23C,#C89020);color:#241800}
+.brokebtn-yes:hover{filter:brightness(1.1)}
