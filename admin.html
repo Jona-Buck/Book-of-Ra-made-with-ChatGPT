@@ -54,6 +54,39 @@
     #status{text-align:center;font-size:.85rem;color:#888;min-height:1.4em;margin-top:.8rem;transition:color .2s}
     #status.ok{color:#44ff88}
     #status.fail{color:#ff4444}
+
+    /* Ziel-Anzeige über den Event-Buttons */
+    #targetBar{
+      display:flex;align-items:center;justify-content:space-between;
+      background:#0a0a1a;border:1px solid #ffd70033;border-radius:.5em;
+      padding:.6em 1em;margin-bottom:1rem;font-size:.85rem;
+    }
+    #targetBar.active{border-color:#44ff8866;background:#0a1a0f}
+    #targetLabel{color:#c8b080}
+    #targetLabel b{color:#ffd700}
+    #targetBar.active #targetLabel b{color:#44ff88}
+    #targetClear{display:none;background:none;border:1px solid #ff666655;color:#ff8888;
+                 padding:.3em .8em;border-radius:.35em;font-size:.78rem;cursor:pointer;width:auto}
+    #targetBar.active #targetClear{display:inline-block}
+
+    /* Spieler-Liste */
+    #playersList{display:flex;flex-direction:column;gap:.6rem;max-height:420px;overflow-y:auto}
+    .player-row{
+      background:#0a0a1a;border:1px solid #ffd70022;border-radius:.5em;
+      padding:.8em 1em;font-size:.82rem;
+    }
+    .player-row.selected{border-color:#44ff8866;background:#0a1a0f}
+    .player-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4em}
+    .player-name{font-weight:700;color:#ffd700;font-size:.95rem}
+    .player-bal{color:#44ff88;font-weight:700}
+    .player-meta{color:#888;font-size:.76rem;line-height:1.5}
+    .player-meta span{color:#c8b080}
+    .player-actions{margin-top:.6em;display:flex;gap:.5em}
+    .btn-target{background:#1a1a2e;color:#ffd700;border:1px solid #ffd70044;
+                padding:.4em .9em;border-radius:.35em;font-size:.78rem;cursor:pointer;width:auto}
+    .btn-target:hover{background:#2a2a4e}
+    .btn-target.is-target{background:#0d3d1a;color:#44ff88;border-color:#44ff8866}
+    #playersEmpty{color:#555;font-size:.85rem;text-align:center;padding:1rem}
   </style>
 </head>
 <body>
@@ -85,6 +118,12 @@
 
   <div class="card">
     <h2 style="margin-bottom:1rem">⚡ Nächster Spin</h2>
+
+    <div id="targetBar">
+      <span id="targetLabel">Ziel: <b>🌐 Alle Spieler</b></span>
+      <button id="targetClear" onclick="clearTarget()">✕ Zurück zu Alle</button>
+    </div>
+
     <div class="evt-grid">
 
       <button class="btn btn-green" onclick="setEvent('normal')">
@@ -110,6 +149,15 @@
       </button>
 
     </div>
+  </div>
+
+  <!-- Spieler-Übersicht -->
+  <div class="card">
+    <div class="card-header">
+      <h2>👥 Spieler</h2>
+      <span style="font-size:.78rem;color:#666" id="playerCount"></span>
+    </div>
+    <div id="playersList"><div id="playersEmpty">Lade Spieler…</div></div>
   </div>
 
   <div id="status"></div>
@@ -143,9 +191,12 @@ const SYMBOLS = [
 const DEFAULT_W = {};
 SYMBOLS.forEach(s => DEFAULT_W[s.id] = s.def);
 
-let db, ref;
+let db, ref, playersRef;
 let W = {...DEFAULT_W};
 let forceSym = null;
+let targetUid = null;   /* null = alle Spieler, sonst UID des ausgewählten Spielers */
+let targetName = '';
+let playersCache = {};
 
 function doLogin() {
   if (document.getElementById('pw').value !== ADMIN_PW) {
@@ -177,6 +228,89 @@ function initFirebase() {
     document.getElementById('conn').textContent = '⬤ Offline';
     document.getElementById('conn').className   = 'err';
   });
+
+  playersRef = db.ref('players');
+  playersRef.on('value', snap => {
+    playersCache = snap.val() || {};
+    renderPlayers();
+  });
+}
+
+/* ── Zeit relativ formatieren ("vor 2 Min", "vor 3 Std", ...) ── */
+function timeAgo(ts) {
+  if (!ts) return '–';
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff/60000), h = Math.floor(m/60), d = Math.floor(h/24);
+  if (d > 0) return `vor ${d} Tag${d>1?'en':''}`;
+  if (h > 0) return `vor ${h} Std.`;
+  if (m > 0) return `vor ${m} Min.`;
+  return 'gerade eben';
+}
+
+function renderPlayers() {
+  const cont = document.getElementById('playersList');
+  const uids = Object.keys(playersCache);
+  document.getElementById('playerCount').textContent = uids.length ? `${uids.length} gesamt` : '';
+
+  if (!uids.length) {
+    cont.innerHTML = '<div id="playersEmpty">Noch keine Spieler registriert.</div>';
+    return;
+  }
+
+  /* Zuletzt aktive zuerst */
+  uids.sort((a,b) => (playersCache[b].lastSeen||0) - (playersCache[a].lastSeen||0));
+
+  cont.innerHTML = '';
+  uids.forEach(uid => {
+    const p = playersCache[uid];
+    const row = document.createElement('div');
+    row.className = 'player-row' + (uid === targetUid ? ' selected' : '');
+    const isTarget = uid === targetUid;
+    row.innerHTML = `
+      <div class="player-top">
+        <span class="player-name">${escapeHtml(p.name || 'Unbenannt')}</span>
+        <span class="player-bal">${fmtEUR(p.balance)}</span>
+      </div>
+      <div class="player-meta">
+        📱 <span>${escapeHtml(p.device||'?')}</span> ·
+        🌐 <span>${escapeHtml(p.ip||'?')}</span> ·
+        🕓 <span>${timeAgo(p.lastSeen)}</span><br>
+        🗣 <span>${escapeHtml(p.language||'?')}</span> ·
+        🕐 <span>${escapeHtml(p.timezone||'?')}</span> ·
+        📅 seit <span>${p.createdAt ? new Date(p.createdAt).toLocaleDateString('de-DE') : '?'}</span>
+      </div>
+      <div class="player-actions">
+        <button class="btn-target ${isTarget?'is-target':''}" onclick="selectPlayer('${uid}','${escapeHtml(p.name||'Unbenannt')}')">
+          ${isTarget ? '🎯 Ziel aktiv' : '🎯 Als Ziel wählen'}
+        </button>
+      </div>`;
+    cont.appendChild(row);
+  });
+}
+
+function fmtEUR(n) {
+  if (typeof n !== 'number') return '–';
+  return n.toFixed(2).replace('.',',') + ' €';
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ── Ziel-Auswahl für Events ── */
+function selectPlayer(uid, name) {
+  targetUid = uid; targetName = name;
+  document.getElementById('targetBar').classList.add('active');
+  document.getElementById('targetLabel').innerHTML = `Ziel: <b>🎯 ${escapeHtml(name)}</b>`;
+  renderPlayers();
+  showStatus(`Ziel gesetzt: ${name}`,'ok');
+}
+
+function clearTarget() {
+  targetUid = null; targetName = '';
+  document.getElementById('targetBar').classList.remove('active');
+  document.getElementById('targetLabel').innerHTML = 'Ziel: <b>🌐 Alle Spieler</b>';
+  renderPlayers();
 }
 
 function buildSliders() {
@@ -252,7 +386,8 @@ function pushWeights() {
 }
 
 function setEvent(type) {
-  if (!ref) { showStatus('❌ Nicht verbunden','fail'); return; }
+  const eventRef = targetUid ? db.ref('players/'+targetUid) : ref;
+  if (!eventRef) { showStatus('❌ Nicht verbunden','fail'); return; }
   const payload = { nextSpin: type, forceWild: forceSym };
 
   if (type === 'forceSym') {
@@ -260,11 +395,12 @@ function setEvent(type) {
     payload.forceWild = forceSym;
   }
 
-  ref.update(payload)
-    .then(() => showStatus(`✓ Event gesetzt: ${type}`,'ok'))
+  const label = targetUid ? `${targetName} (gezielt)` : 'alle Spieler';
+  eventRef.update(payload)
+    .then(() => showStatus(`✓ Event "${type}" gesetzt für: ${label}`,'ok'))
     .catch(e => showStatus('❌ '+e.message,'fail'));
 
-  if (type !== 'normal') setTimeout(() => ref?.update({nextSpin:'normal',forceWild:null}), 12000);
+  if (type !== 'normal') setTimeout(() => eventRef?.update({nextSpin:'normal',forceWild:null}), 12000);
 }
 
 function buildSymPicker() {
