@@ -62,6 +62,7 @@ function doGm(red){
     /* Phase 2: determine result, paint the back face, then flip ── */
     const idx=Math.floor(Math.random()*4),isR=idx<2;
     back.innerHTML='&#'+SUITS[idx]+';';
+    back.classList.remove('is-red','is-black'); /* Vorherige Farbe entfernen — sonst stapeln sich beide Klassen bei Verdopplungs-Ketten und CSS-Reihenfolge (nicht das echte Symbol) entscheidet die Farbe */
     back.classList.add(isR?'is-red':'is-black');
     card.classList.add('flipped');
 
