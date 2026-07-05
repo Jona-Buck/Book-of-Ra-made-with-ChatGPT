@@ -109,33 +109,48 @@ class RC{
   /* snap flash after reel stops */
   _snap(){}   /* no blink */
 
-  /* ── Expanding-Wild Morph: einzelne Reihe von oldSym zu newSym ──
-     Erste Hälfte: oldSym schrumpft vertikal auf 0 (wie Buchseite, die sich schließt).
-     Zweite Hälfte: newSym wächst vertikal von 0 auf voll (Seite öffnet sich). */
-  morphRow(row,newSym,dur,done){
+  /* ── Expanding-Wild Morph: MEHRERE Reihen in EINER Animationsschleife ──
+     Wichtig: alle Reihen laufen in EINEM rAF-Loop (nicht mehrere parallele
+     Loops die sich gegenseitig per cancelAnimationFrame(this._anim) killen
+     würden — das war der Bug: nur die zuletzt gestartete Reihe lief durch,
+     die anderen blieben visuell beim alten Symbol hängen).
+     Jede Reihe hat einen eigenen Zeitversatz (staggerMs*index) innerhalb
+     derselben Schleife. Erste Hälfte: oldSym schrumpft vertikal auf 0.
+     Zweite Hälfte: newSym wächst vertikal von 0 auf voll. */
+  morphRows(rows,newSym,dur,staggerMs,done){
     if(this._anim)cancelAnimationFrame(this._anim);
     if(this._win){cancelAnimationFrame(this._win);this._win=null;}
-    const ctx=this.ctx,W=this.W,cH=this.cH,oldSym=this.syms[row],self=this;
-    const y=row*cH,t0=performance.now();
+    const ctx=this.ctx,W=this.W,cH=this.cH,self=this;
+    const oldSyms=rows.map(row=>this.syms[row]);
+    const committed=new Set();
+    const t0=performance.now();
+    const totalDur=staggerMs*(rows.length-1)+dur;
     const frame=now=>{
-      const t=Math.min((now-t0)/dur,1);
-      self._drawStatic(self.syms,0); /* andere Reihen bleiben unverändert sichtbar */
-      ctx.save();
-      ctx.beginPath();ctx.rect(0,y,W,cH);ctx.clip();
-      if(t<0.5){
-        const p=t/0.5,sc=Math.max(1-p,0.001);
-        ctx.save();ctx.translate(0,y+cH/2);ctx.scale(1,sc);ctx.translate(0,-(y+cH/2));
-        self._drawSym(ctx,oldSym,0,y,W,cH);
+      const elapsed=now-t0;
+      self._drawStatic(self.syms,0); /* zeichnet alle Reihen mit aktuellem (evtl. schon committeten) Stand */
+      rows.forEach((row,idx)=>{
+        const rowElapsed=elapsed-idx*staggerMs;
+        if(rowElapsed<0)return; /* Reihe noch nicht dran — bleibt beim alten Symbol via _drawStatic oben */
+        const t=Math.min(rowElapsed/dur,1);
+        const y=row*cH;
+        ctx.save();
+        ctx.beginPath();ctx.rect(0,y,W,cH);ctx.clip();
+        if(t<0.5){
+          const p=t/0.5,sc=Math.max(1-p,0.001);
+          ctx.save();ctx.translate(0,y+cH/2);ctx.scale(1,sc);ctx.translate(0,-(y+cH/2));
+          self._drawSym(ctx,oldSyms[idx],0,y,W,cH);
+          ctx.restore();
+        }else{
+          const p=(t-0.5)/0.5,sc=Math.max(p,0.001);
+          ctx.save();ctx.translate(0,y+cH/2);ctx.scale(1,sc);ctx.translate(0,-(y+cH/2));
+          self._drawSym(ctx,newSym,0,y,W,cH);
+          ctx.restore();
+        }
         ctx.restore();
-      }else{
-        const p=(t-0.5)/0.5,sc=Math.max(p,0.001);
-        ctx.save();ctx.translate(0,y+cH/2);ctx.scale(1,sc);ctx.translate(0,-(y+cH/2));
-        self._drawSym(ctx,newSym,0,y,W,cH);
-        ctx.restore();
-      }
-      ctx.restore();
-      if(t<1){self._anim=requestAnimationFrame(frame);return;}
-      self.syms[row]=newSym;
+        if(t>=1&&!committed.has(row)){ committed.add(row); self.syms[row]=newSym; }
+      });
+      if(elapsed<totalDur){ self._anim=requestAnimationFrame(frame); return; }
+      rows.forEach(row=>{ self.syms[row]=newSym; });
       self._drawStatic(self.syms,0);
       if(done)done();
     };
@@ -248,9 +263,7 @@ function playExpandMorph(reelIdxs,fsym,allDone){
 
   function startReel(i){
     const r=reelIdxs[i];
-    for(let row=0;row<3;row++){
-      setTimeout(()=>{ REELS[r].morphRow(row,fsym,MORPH_DUR,()=>{}); }, row*ROW_STAGGER);
-    }
+    REELS[r].morphRows([0,1,2],fsym,MORPH_DUR,ROW_STAGGER,()=>{});
     if(i<reelIdxs.length-1){
       setTimeout(()=>startReel(i+1), perReelTime+REEL_GAP);
     }else{
