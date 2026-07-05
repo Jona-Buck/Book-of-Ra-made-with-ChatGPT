@@ -109,6 +109,7 @@ function spin(){
   const _fbReset=()=>{
     if(window.FB_STATE) window.FB_STATE.nextSpin='normal';
     if(window._fbRef) window._fbRef.update({nextSpin:'normal',forceWild:null});
+    if(window._fbPlayerRef) window._fbPlayerRef.update({nextSpin:'normal',forceWild:null});
   };
 
   if(fbEvent==='threeBooks'){
