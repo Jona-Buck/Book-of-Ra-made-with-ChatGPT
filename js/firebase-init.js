@@ -25,6 +25,46 @@ window.FB_STATE = {
   connected: false
 };
 
+/* ── Spieler-Guthaben-Persistenz ──
+   Anonyme Firebase-Auth gibt jedem Browser/Gerät eine feste, unsichtbare
+   User-ID (kein Login nötig). Guthaben wird darunter gespeichert und beim
+   nächsten Besuch automatisch geladen — überlebt Tab schließen/Neustart. */
+let _playerRef = null;
+let _saveTimer = null;
+
+function saveBalance(bal){
+  if(!_playerRef) return; /* noch nicht eingeloggt / Firebase nicht verfügbar */
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    _playerRef.update({ balance: bal, lastSeen: Date.now() }).catch(()=>{});
+  }, 600); /* debounced — nicht bei jedem Update sofort schreiben */
+}
+
+function initPlayerPersistence(){
+  try{
+    firebase.auth().signInAnonymously().catch(e=>console.warn("Anon-Auth fehlgeschlagen:",e));
+    firebase.auth().onAuthStateChanged(user=>{
+      if(!user) return;
+      _playerRef = firebase.database().ref("players/"+user.uid);
+      _playerRef.once("value").then(snap=>{
+        const d = snap.val();
+        if(d && typeof d.balance==="number"){
+          /* Gespeichertes Guthaben übernehmen */
+          if(typeof S!=="undefined"){
+            S.bal = d.balance;
+            if(typeof ui==="function") ui();
+          }
+        } else {
+          /* Erster Besuch — Startguthaben einmalig sichern */
+          _playerRef.set({ balance: (typeof S!=="undefined"?S.bal:1000), lastSeen: Date.now() });
+        }
+      }).catch(e=>console.warn("Guthaben laden fehlgeschlagen:",e));
+    });
+  }catch(e){
+    console.warn("Spieler-Persistenz nicht verfügbar:",e);
+  }
+}
+
 function initFirebase() {
   try {
     firebase.initializeApp(FIREBASE_CFG);
@@ -63,4 +103,7 @@ function initFirebase() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", initFirebase);
+document.addEventListener("DOMContentLoaded", () => {
+  initFirebase();
+  initPlayerPersistence();
+});
