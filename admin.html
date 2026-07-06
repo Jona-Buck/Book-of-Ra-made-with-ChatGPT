@@ -266,12 +266,22 @@ function renderPlayers() {
     const row = document.createElement('div');
     row.className = 'player-row' + (uid === targetUid ? ' selected' : '');
     const isTarget = uid === targetUid;
+
+    const providerIcon = p.authProvider === 'google.com' ? '🔵 Google'
+                        : p.authProvider === 'phone'      ? '📱 Telefon'
+                        : p.authProvider === 'password'   ? '✉️ E-Mail'
+                        : '❔ Unbekannt';
+    const contactLine = p.email ? `✉️ <span>${escapeHtml(p.email)}</span>${p.emailVerified?' ✅':' ⚠️ unverifiziert'}`
+                       : p.phoneNumber ? `📞 <span>${escapeHtml(p.phoneNumber)}</span>`
+                       : '';
+
     row.innerHTML = `
       <div class="player-top">
         <span class="player-name">${escapeHtml(p.name || 'Unbenannt')}</span>
         <span class="player-bal">${fmtEUR(p.balance)}</span>
       </div>
       <div class="player-meta">
+        ${providerIcon}${contactLine ? ' · '+contactLine : ''}<br>
         📱 <span>${escapeHtml(p.device||'?')}</span> ·
         🌐 <span>${escapeHtml(p.ip||'?')}</span> ·
         🕓 <span>${timeAgo(p.lastSeen)}</span><br>
