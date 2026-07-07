@@ -157,6 +157,9 @@
       <h2>👥 Spieler</h2>
       <span style="font-size:.78rem;color:#666" id="playerCount"></span>
     </div>
+    <button class="btn btn-sm btn-reset" style="margin-bottom:.8rem" onclick="deleteAllPlayers()">
+      🗑 Alle Spieler-Daten löschen
+    </button>
     <div id="playersList"><div id="playersEmpty">Lade Spieler…</div></div>
   </div>
 
@@ -321,6 +324,19 @@ function clearTarget() {
   document.getElementById('targetBar').classList.remove('active');
   document.getElementById('targetLabel').innerHTML = 'Ziel: <b>🌐 Alle Spieler</b>';
   renderPlayers();
+}
+
+/* Löscht alle Spieler-DATENSÄTZE (Guthaben, Name, Geräteinfo usw.) aus der
+   Datenbank. Löscht NICHT die eigentlichen Firebase-Auth-Konten selbst
+   (Google/Telefon/E-Mail-Identitäten) — die bleiben registriert, sind aber
+   ohne Datensatz beim nächsten Login einfach "neu". Um auch die Auth-Konten
+   selbst zu entfernen: Firebase-Konsole → Authentication → Nutzer → Auswahl → Löschen. */
+function deleteAllPlayers() {
+  if (!confirm('Wirklich ALLE Spieler-Datensätze löschen? (Guthaben, Namen, Geräteinfo)\n\nDies kann nicht rückgängig gemacht werden.')) return;
+  if (!playersRef) { showStatus('❌ Nicht verbunden','fail'); return; }
+  playersRef.remove()
+    .then(() => showStatus('✓ Alle Spieler-Datensätze gelöscht','ok'))
+    .catch(e => showStatus('❌ '+e.message,'fail'));
 }
 
 function buildSliders() {
