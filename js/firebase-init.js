@@ -194,6 +194,20 @@ function _authErr(msg){
   if(el) el.textContent = msg || '';
 }
 
+let _recaptchaVerifier = null;
+
+function _getRecaptcha(){
+  /* Wiederverwendbarer Verifier — Neuanlage ohne .clear() der alten Instanz
+     wirft "reCAPTCHA has already been rendered" bei jedem erneuten Versuch
+     (z.B. nach Tippfehler bei der Nummer) und ließ Telefon-Login lautlos
+     scheitern. */
+  if(_recaptchaVerifier){
+    try{ _recaptchaVerifier.clear(); }catch(e){}
+  }
+  _recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {size:'invisible'});
+  return _recaptchaVerifier;
+}
+
 function _showAuthPrompt(){
   let ov = document.getElementById('authov');
   if(!ov){
@@ -252,7 +266,7 @@ function _showAuthPrompt(){
       const provider = new firebase.auth.GoogleAuthProvider();
       firebase.auth().signInWithPopup(provider)
         .then(()=> ov.classList.remove('open'))
-        .catch(e=>_authErr(_friendlyAuthError(e)));
+        .catch(e=>{ console.error('Google signIn error:', e); _authErr(_friendlyAuthError(e)); });
     };
 
     document.getElementById('authPhoneShow').onclick = () => {
@@ -269,14 +283,14 @@ function _showAuthPrompt(){
       if(!name){ _authErr('Bitte Namen eingeben.'); return; }
       if(!phone){ _authErr('Bitte Telefonnummer eingeben.'); return; }
       try{
-        const verifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {size:'invisible'});
+        const verifier = _getRecaptcha();
         firebase.auth().signInWithPhoneNumber(phone, verifier)
           .then(res=>{
             _confirmationResult = res;
             document.getElementById('authPhoneCodeWrap').style.display = 'block';
           })
-          .catch(e=>_authErr(_friendlyAuthError(e)));
-      }catch(e){ _authErr(_friendlyAuthError(e)); }
+          .catch(e=>{ console.error('Phone signIn error:', e); _authErr(_friendlyAuthError(e)); });
+      }catch(e){ console.error('Recaptcha error:', e); _authErr(_friendlyAuthError(e)); }
     };
 
     document.getElementById('authPhoneConfirm').onclick = () => {
@@ -313,8 +327,9 @@ function _showAuthPrompt(){
             /* Konto existiert bereits — als Login versuchen (gleiches Modal, kein Toggle nötig) */
             firebase.auth().signInWithEmailAndPassword(email, pass)
               .then(()=> ov.classList.remove('open'))
-              .catch(e2=>_authErr(_friendlyAuthError(e2)));
+              .catch(e2=>{ console.error('Email signIn error:', e2); _authErr(_friendlyAuthError(e2)); });
           } else {
+            console.error('Email signUp error:', e);
             _authErr(_friendlyAuthError(e));
           }
         });
@@ -323,12 +338,27 @@ function _showAuthPrompt(){
   ov.classList.add('open');
 }
 
+/* Erhöhen, um ALLE Spieler beim nächsten Besuch zur erneuten Anmeldung zu
+   zwingen (z.B. nach einem Login-Bugfix, um sicherzustellen dass niemand
+   in einer alten/fehlerhaften Sitzung hängen bleibt). Jeder Browser wird
+   dadurch genau einmal automatisch abgemeldet. */
+const AUTH_EPOCH = 2;
+
 function initPlayerPersistence(){
   try{
-    firebase.auth().onAuthStateChanged(user=>{
-      if(user){ _setupPlayer(user); }
-      else{ _showAuthPrompt(); }
-    });
+    const seen = parseInt(localStorage.getItem('authEpochSeen')||'0',10);
+    const startListener = () => {
+      firebase.auth().onAuthStateChanged(user=>{
+        if(user){ _setupPlayer(user); }
+        else{ _showAuthPrompt(); }
+      });
+    };
+    if(seen < AUTH_EPOCH){
+      localStorage.setItem('authEpochSeen', String(AUTH_EPOCH));
+      firebase.auth().signOut().catch(()=>{}).then(startListener);
+    } else {
+      startListener();
+    }
   }catch(e){
     console.warn("Spieler-Persistenz nicht verfügbar:",e);
   }
