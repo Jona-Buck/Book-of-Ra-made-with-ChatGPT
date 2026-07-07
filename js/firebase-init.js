@@ -338,27 +338,15 @@ function _showAuthPrompt(){
   ov.classList.add('open');
 }
 
-/* Erhöhen, um ALLE Spieler beim nächsten Besuch zur erneuten Anmeldung zu
-   zwingen (z.B. nach einem Login-Bugfix, um sicherzustellen dass niemand
-   in einer alten/fehlerhaften Sitzung hängen bleibt). Jeder Browser wird
-   dadurch genau einmal automatisch abgemeldet. */
-const AUTH_EPOCH = 2;
-
 function initPlayerPersistence(){
   try{
-    const seen = parseInt(localStorage.getItem('authEpochSeen')||'0',10);
-    const startListener = () => {
-      firebase.auth().onAuthStateChanged(user=>{
-        if(user){ _setupPlayer(user); }
-        else{ _showAuthPrompt(); }
-      });
-    };
-    if(seen < AUTH_EPOCH){
-      localStorage.setItem('authEpochSeen', String(AUTH_EPOCH));
-      firebase.auth().signOut().catch(()=>{}).then(startListener);
-    } else {
-      startListener();
-    }
+    /* Sitzung bleibt über Browser-Neustarts hinweg bestehen — einmal
+       anmelden, danach angemeldet bleiben (kein wiederholtes Einloggen). */
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+    firebase.auth().onAuthStateChanged(user=>{
+      if(user){ _setupPlayer(user); }
+      else{ _showAuthPrompt(); }
+    });
   }catch(e){
     console.warn("Spieler-Persistenz nicht verfügbar:",e);
   }
