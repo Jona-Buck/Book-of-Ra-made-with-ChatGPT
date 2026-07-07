@@ -415,3 +415,27 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
   color:#ff6666;font-size:.82rem;min-height:1.2em;margin-top:.8rem;
 }
 #recaptcha-container{margin-top:.4rem}
+
+/* ── Freispiel-Retrigger: kurzer Puls auf dem bestehenden Banner + "+10"-Label ── */
+#fsb.retrigger{animation:fsRetriggerPulse .9s ease-out}
+@keyframes fsRetriggerPulse{
+  0%{background:linear-gradient(90deg,transparent,rgba(255,210,0,.55) 5%,rgba(255,210,0,.55) 95%,transparent);}
+  100%{background:linear-gradient(90deg,transparent,rgba(10,60,8,.96) 5%,rgba(10,60,8,.96) 95%,transparent);}
+}
+#fsRetriggerLbl{
+  position:absolute;top:50%;left:50%;z-index:60;
+  transform:translate(-50%,-50%) scale(.6);
+  color:#FFD23C;font-size:clamp(1.4rem,5vw,2.6rem);font-weight:900;
+  letter-spacing:.05em;text-shadow:0 0 20px #ff8c00,0 0 40px #ffd700,0 2px 0 #000;
+  opacity:0;pointer-events:none;
+}
+#fsRetriggerLbl.show{
+  animation:fsRetriggerLbl 1.4s ease-out forwards;
+}
+@keyframes fsRetriggerLbl{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.6);}
+  20%{opacity:1;transform:translate(-50%,-50%) scale(1.08);}
+  30%{transform:translate(-50%,-50%) scale(1);}
+  75%{opacity:1;}
+  100%{opacity:0;transform:translate(-50%,-60%) scale(1);}
+}
