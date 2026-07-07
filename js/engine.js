@@ -162,12 +162,19 @@ function evalW(){
     });
     winData.push({isScatter:true,sym:SY[0],pay:scPay,sc,scRows});
     if(!S.fs){
+      /* Erste Auslösung: neues Sondersymbol bestimmen, volles Intro zeigen */
       fsTrigger=true;
       S.fs=10; { const cand=SY.filter(s=>s.id!=='book'); S.fsym=cand[Math.floor(Math.random()*cand.length)]; }
       document.getElementById('fsc').textContent=10;
       document.getElementById('fss').textContent=S.fsym.n.split(' ')[0];
       document.getElementById('fssi').src=S.fsym.s;
       playFsIntro();
+    } else {
+      /* Retrigger (Original-Verhalten): +10 Freispiele ONTOP der verbleibenden,
+         unbegrenzt oft möglich, das bereits gewählte Sondersymbol bleibt gleich. */
+      S.fs+=10;
+      document.getElementById('fsc').textContent=S.fs;
+      if(typeof playFsRetrigger==='function') playFsRetrigger();
     }
   }
 
