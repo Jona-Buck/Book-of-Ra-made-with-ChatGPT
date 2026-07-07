@@ -59,6 +59,30 @@ function playFsIntro(){
   setTimeout(()=>{ card.classList.add('revealed'); },550);
 }
 
+/* ── Freispiel-Retrigger (Original-Verhalten) ──
+   3+ Bücher WÄHREND laufender Freispiele geben +10 Freispiele oben drauf,
+   das Sondersymbol bleibt gleich — daher KEIN volles Intro-Overlay nötig
+   (das würde fälschlich eine neue Symbol-Wahl suggerieren). Stattdessen
+   kurzer Puls auf dem bestehenden Banner + schwebendes "+10"-Label. */
+function playFsRetrigger(){
+  const banner=document.getElementById('fsb');
+  banner.classList.remove('retrigger');
+  void banner.offsetWidth; /* Reflow erzwingen, damit die Animation erneut startet */
+  banner.classList.add('retrigger');
+  setTimeout(()=>banner.classList.remove('retrigger'),950);
+
+  let lbl=document.getElementById('fsRetriggerLbl');
+  if(!lbl){
+    lbl=document.createElement('div');
+    lbl.id='fsRetriggerLbl';
+    document.getElementById('stage').appendChild(lbl);
+  }
+  lbl.textContent='+10 FREISPIELE';
+  lbl.classList.remove('show');
+  void lbl.offsetWidth;
+  lbl.classList.add('show');
+}
+
 function closeGm(){
   gAct=false;gGen++; /* invalidate any in-flight doGm timeout chain */
   document.getElementById('gmov').classList.remove('open');
