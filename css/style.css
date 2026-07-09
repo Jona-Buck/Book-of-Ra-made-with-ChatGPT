@@ -399,13 +399,12 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
 .authmethod-go{background:linear-gradient(160deg,#FFD23C,#C89020);color:#241800;border:none;margin-top:.3rem}
 .authmethod-go:hover{filter:brightness(1.1)}
 
-#authPhoneForm input,#authEmailForm input{
+#authEmailForm input{
   width:100%;background:#241A10;border:1px solid #55483C;border-radius:6px;
   color:#fff;padding:.65em 1em;font-size:.92rem;margin-bottom:.6rem;
   outline:none;text-align:center;box-sizing:border-box;
 }
-#authPhoneForm input:focus,#authEmailForm input:focus{border-color:#FFD23C}
-#authPhoneCodeWrap{margin-top:.6rem}
+#authEmailForm input:focus{border-color:#FFD23C}
 .authBack{
   display:inline-block;margin-top:.9rem;color:#998868;font-size:.82rem;
   text-decoration:none;
@@ -414,7 +413,6 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
 #authError{
   color:#ff6666;font-size:.82rem;min-height:1.2em;margin-top:.8rem;
 }
-#recaptcha-container{margin-top:.4rem}
 
 /* ── Freispiel-Retrigger: kurzer Puls auf dem bestehenden Banner + "+10"-Label ── */
 #fsb.retrigger{animation:fsRetriggerPulse .9s ease-out}
