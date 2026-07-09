@@ -79,7 +79,6 @@ function initFirebase() {
    ══════════════════════════════════════════════════════════ */
 let _playerRef = null;
 let _saveTimer = null;
-let _confirmationResult = null; /* Phone-Auth: laufender SMS-Vorgang */
 
 function saveBalance(bal){
   if(!_playerRef) return;
@@ -126,8 +125,6 @@ function _friendlyAuthError(e){
     "auth/wrong-password":            "Falsches Passwort.",
     "auth/invalid-email":             "Ungültige E-Mail-Adresse.",
     "auth/weak-password":             "Passwort zu schwach (mind. 6 Zeichen).",
-    "auth/invalid-verification-code": "Falscher Code.",
-    "auth/invalid-phone-number":      "Ungültige Telefonnummer (mit Ländervorwahl, z.B. +49...).",
     "auth/too-many-requests":         "Zu viele Versuche. Bitte später erneut probieren.",
     "auth/popup-closed-by-user":      "Anmeldung abgebrochen.",
     "auth/user-not-found":            "Kein Konto mit dieser E-Mail gefunden.",
@@ -194,20 +191,6 @@ function _authErr(msg){
   if(el) el.textContent = msg || '';
 }
 
-let _recaptchaVerifier = null;
-
-function _getRecaptcha(){
-  /* Wiederverwendbarer Verifier — Neuanlage ohne .clear() der alten Instanz
-     wirft "reCAPTCHA has already been rendered" bei jedem erneuten Versuch
-     (z.B. nach Tippfehler bei der Nummer) und ließ Telefon-Login lautlos
-     scheitern. */
-  if(_recaptchaVerifier){
-    try{ _recaptchaVerifier.clear(); }catch(e){}
-  }
-  _recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {size:'invisible'});
-  return _recaptchaVerifier;
-}
-
 function _showAuthPrompt(){
   let ov = document.getElementById('authov');
   if(!ov){
@@ -221,20 +204,7 @@ function _showAuthPrompt(){
 
         <div id="authChoice">
           <button class="authmethod" id="authGoogleBtn">🔵 Mit Google anmelden</button>
-          <button class="authmethod" id="authPhoneShow">📱 Mit Telefonnummer</button>
           <button class="authmethod" id="authEmailShow">✉️ Mit E-Mail</button>
-        </div>
-
-        <div id="authPhoneForm" style="display:none">
-          <input type="text" id="authName1" maxlength="24" placeholder="Dein Name">
-          <input type="tel" id="authPhone" placeholder="+49 151 12345678">
-          <button class="authmethod authmethod-go" id="authPhoneSend">Code senden</button>
-          <div id="authPhoneCodeWrap" style="display:none">
-            <input type="text" id="authPhoneCode" maxlength="6" placeholder="SMS-Code">
-            <button class="authmethod authmethod-go" id="authPhoneConfirm">Bestätigen</button>
-          </div>
-          <div id="recaptcha-container"></div>
-          <a href="#" class="authBack">← Zurück</a>
         </div>
 
         <div id="authEmailForm" style="display:none">
@@ -250,11 +220,9 @@ function _showAuthPrompt(){
     document.body.appendChild(ov);
 
     const choice = document.getElementById('authChoice');
-    const phoneForm = document.getElementById('authPhoneForm');
     const emailForm = document.getElementById('authEmailForm');
 
     function backToChoice(){
-      phoneForm.style.display = 'none';
       emailForm.style.display = 'none';
       choice.style.display = 'flex';
       _authErr('');
@@ -269,42 +237,8 @@ function _showAuthPrompt(){
         .catch(e=>{ console.error('Google signIn error:', e); _authErr(_friendlyAuthError(e)); });
     };
 
-    document.getElementById('authPhoneShow').onclick = () => {
-      choice.style.display = 'none'; phoneForm.style.display = 'block'; _authErr('');
-    };
     document.getElementById('authEmailShow').onclick = () => {
       choice.style.display = 'none'; emailForm.style.display = 'block'; _authErr('');
-    };
-
-    document.getElementById('authPhoneSend').onclick = () => {
-      _authErr('');
-      const name  = document.getElementById('authName1').value.trim();
-      const phone = document.getElementById('authPhone').value.trim();
-      if(!name){ _authErr('Bitte Namen eingeben.'); return; }
-      if(!phone){ _authErr('Bitte Telefonnummer eingeben.'); return; }
-      try{
-        const verifier = _getRecaptcha();
-        firebase.auth().signInWithPhoneNumber(phone, verifier)
-          .then(res=>{
-            _confirmationResult = res;
-            document.getElementById('authPhoneCodeWrap').style.display = 'block';
-          })
-          .catch(e=>{ console.error('Phone signIn error:', e); _authErr(_friendlyAuthError(e)); });
-      }catch(e){ console.error('Recaptcha error:', e); _authErr(_friendlyAuthError(e)); }
-    };
-
-    document.getElementById('authPhoneConfirm').onclick = () => {
-      _authErr('');
-      const code = document.getElementById('authPhoneCode').value.trim();
-      const name = document.getElementById('authName1').value.trim();
-      if(!_confirmationResult){ _authErr('Bitte zuerst Code anfordern.'); return; }
-      _confirmationResult.confirm(code)
-        .then(result=>{
-          ov.classList.remove('open');
-          return result.user.updateProfile({displayName:name}).catch(()=>{})
-            .then(()=> firebase.database().ref('players/'+result.user.uid).update({name}).catch(()=>{}));
-        })
-        .catch(e=>_authErr(_friendlyAuthError(e)));
     };
 
     document.getElementById('authEmailGo').onclick = () => {
