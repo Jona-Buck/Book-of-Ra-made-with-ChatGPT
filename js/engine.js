@@ -42,7 +42,7 @@ function chainStop(r,fg,done){
   for(let i=0;i<r;i++)
     for(let row=0;row<3;row++)
       if(G[i][row]&&G[i][row].id==='book')books++;
-  const tension=(r>=2)&&(books>=2);
+  const tension=(r>=2)&&(books>=2)&&!window._skipSpin; /* Skip überspringt auch die Tension-Dramatik */
 
   /* Start THIS reel decelerating */
   REELS[r].triggerStop(fg[r],tension,()=>{
@@ -51,15 +51,17 @@ function chainStop(r,fg,done){
   });
 
   /* Trigger NEXT reel STOP_GAP ms after THIS reel STARTS (not finishes).
-     Tension reels keep the gap so the drama builds visibly. */
+     Tension reels keep the gap so the drama builds visibly.
+     Bei aktivem Skip: kein Gap mehr, alle restlichen Walzen folgen sofort. */
   if(r<4){
-    const gap=tension?STOP_GAP*4:STOP_GAP;
+    const gap=window._skipSpin?0:(tension?STOP_GAP*4:STOP_GAP);
     setTimeout(()=>chainStop(r+1,fg,done), gap);
   }
 }
 
 function spin(){
-  if(S.sp)return;
+  if(S.sp){ skipCurrentSpin(); return; }
+  window._skipSpin=false; /* frischer Spin startet immer ungeskippt */
   const bet=S.ln*BETS[S.bi];
   if(!S.fs&&S.bal<bet){
     flashE('dbal');
@@ -69,7 +71,9 @@ function spin(){
   }
   S.sp=true;S.win=0;
   document.getElementById('dwin').classList.remove('won');
-  document.getElementById('spin').disabled=true;
+  /* Spin-Button bleibt AKTIV während des Spins — ein Klick währenddessen
+     soll den laufenden Spin skippen (siehe skipCurrentSpin()). Ein
+     disabled-Button würde gar keine Klicks mehr registrieren. */
   const g5b=document.getElementById('g5050');
   g5b.disabled=true; g5b.classList.remove('ready');
   document.querySelectorAll('.cell.win').forEach(c=>c.classList.remove('win'));
@@ -142,8 +146,29 @@ function spin(){
   }
   /* Start all reels fast simultaneously */
   REELS.forEach(rc=>rc.startFastSpin());
-  /* After initial fast spin, chain the stops */
-  setTimeout(()=>chainStop(0,fg,()=>setTimeout(evalW,180)),INIT_MS);
+  /* After initial fast spin, chain the stops. window._pendingChainStart lets
+     skipCurrentSpin() cancel this wait and start the stop-chain immediately
+     if the player clicks Spin again while reels are still fast-spinning. */
+  const startChain=()=>{
+    window._pendingChainStart=null;
+    chainStop(0,fg,()=>setTimeout(evalW, window._skipSpin?0:180));
+  };
+  const chainTimer=setTimeout(startChain,INIT_MS);
+  window._pendingChainStart=()=>{ clearTimeout(chainTimer); startChain(); };
+}
+
+/* Wird aufgerufen wenn der Spieler während eines laufenden Spins erneut auf
+   Spin klickt (Original-Verhalten: kompletter Spin wird sofort zu Ende
+   gespielt statt normal auszurollen — Walzenstopp, Expand-Morph und
+   Gewinnlinien-Sequenz springen alle direkt zum Endzustand). */
+function skipCurrentSpin(){
+  window._skipSpin=true;
+  if(typeof window._pendingChainStart==='function'){
+    window._pendingChainStart();
+  }
+  /* Aktive Gewinnlinien-Sequenz (falls schon am Laufen) überspringen —
+     nutzt den bereits vorhandenen #winskip-Mechanismus aus win.js. */
+  document.getElementById('winskip')?.click();
 }
 
 function evalW(){
