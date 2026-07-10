@@ -126,7 +126,7 @@ class RC{
     const t0=performance.now();
     const totalDur=staggerMs*(rows.length-1)+dur;
     const frame=now=>{
-      const elapsed=now-t0;
+      const elapsed=window._skipSpin ? totalDur : now-t0;
       self._drawStatic(self.syms,0); /* zeichnet alle Reihen mit aktuellem (evtl. schon committeten) Stand */
       rows.forEach((row,idx)=>{
         const rowElapsed=elapsed-idx*staggerMs;
@@ -228,7 +228,7 @@ class RC{
     const ctx=this.ctx,W=this.W,H=this.H,self=this;
     const t0=performance.now();
     const frame=now=>{
-      const t=Math.min((now-t0)/decelDur,1);
+      const t=window._skipSpin ? 1 : Math.min((now-t0)/decelDur,1);
       const off=startOff+ez(t)*(endOff-startOff);
       ctx.clearRect(0,0,W,H);
       for(let i=0;i<strip.length;i++){
@@ -265,7 +265,7 @@ function playExpandMorph(reelIdxs,fsym,allDone){
     const r=reelIdxs[i];
     REELS[r].morphRows([0,1,2],fsym,MORPH_DUR,ROW_STAGGER,()=>{});
     if(i<reelIdxs.length-1){
-      setTimeout(()=>startReel(i+1), perReelTime+REEL_GAP);
+      setTimeout(()=>startReel(i+1), window._skipSpin?0:(perReelTime+REEL_GAP));
     }else{
       /* Letzte Walze fertig → alle betroffenen Walzen kurz golden aufleuchten lassen */
       setTimeout(()=>{
@@ -273,8 +273,8 @@ function playExpandMorph(reelIdxs,fsym,allDone){
         setTimeout(()=>{
           reelIdxs.forEach(ri=>REELS[ri].clearWin());
           _finish();
-        },500);
-      },perReelTime+60);
+        },window._skipSpin?0:500);
+      },window._skipSpin?0:(perReelTime+60));
     }
   }
   startReel(0);
