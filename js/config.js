@@ -19,7 +19,8 @@ function rnd(){let r=Math.random()*TW;for(const s of SY){r-=s.w;if(r<=0)return s
 const PL=[[1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],[1,0,0,0,1],[1,2,2,2,1],[0,0,1,2,2],[2,2,1,0,0],[0,1,0,1,0]];
 const BETS=[.1,.2,.5,1,2,5,10],DUR=[1050,1300,1580,1880,2200],FILL=15;
 let G=[];
-const S={bal:1000,win:0,ln:10,bi:3,sp:false,fs:0,fsym:null,auto:false,aN:0};
+const S={bal:1000,win:0,ln:10,bi:3,sp:false,fs:0,fsym:null,auto:false,aN:0,
+  turbo:localStorage.getItem('boraTurbo')==='1'};
 
 /* ── Visuals-Busy-Zähler ──
    Jede rein visuelle Sequenz (Gewinnlinien, Expand-Wild-Morph, Freispiel-Intro)
