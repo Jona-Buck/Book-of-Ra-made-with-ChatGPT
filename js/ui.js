@@ -43,9 +43,6 @@ document.getElementById('fsok').onclick=()=>{
   document.getElementById('fsb').style.display='block';
   if(typeof endVisual==='function') endVisual();
 };
-document.getElementById('snd').onclick=function(){
-  this.style.color=(this.style.color==='#F0CB50')?'':'#F0CB50';
-};
 document.addEventListener('keydown',e=>{
   if(e.code==='Space'){e.preventDefault();spin();}
   if(e.key==='Escape'){document.getElementById('ptov').classList.remove('open');closeGm();}
