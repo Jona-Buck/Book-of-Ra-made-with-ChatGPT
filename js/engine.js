@@ -52,11 +52,13 @@ function chainStop(r,fg,done){
 
   /* Trigger NEXT reel STOP_GAP ms after THIS reel STARTS (not finishes).
      Tension reels keep the gap so the drama builds visibly.
-     Bei aktivem Skip: kein Gap mehr, alle restlichen Walzen folgen sofort. */
+     Turbo-Modus verkürzt den Gap grundsätzlich; aktiver Skip verkürzt ihn
+     zusätzlich noch weiter (die beiden Effekte stapeln sich). */
   if(r<4){
-    const normalGap=tension?STOP_GAP*4:STOP_GAP;
-    const gap=window._skipSpin?Math.max(30,Math.round(normalGap/SKIP_TIME_MULT)):normalGap;
-    setTimeout(()=>chainStop(r+1,fg,done), gap);
+    let gap=tension?STOP_GAP*4:STOP_GAP;
+    if(S.turbo) gap=gap/TURBO_SPEED_MULT;
+    if(window._skipSpin) gap=Math.max(30,gap/SKIP_TIME_MULT);
+    setTimeout(()=>chainStop(r+1,fg,done), Math.round(gap));
   }
 }
 
@@ -154,9 +156,9 @@ function spin(){
      if the player clicks Spin again while reels are still fast-spinning. */
   const startChain=()=>{
     window._pendingChainStart=null;
-    chainStop(0,fg,()=>setTimeout(evalW, window._skipSpin?0:180));
+    chainStop(0,fg,()=>setTimeout(evalW, window._skipSpin?0:(S.turbo?Math.round(180/TURBO_SPEED_MULT):180)));
   };
-  const chainTimer=setTimeout(startChain,INIT_MS);
+  const chainTimer=setTimeout(startChain, S.turbo?Math.round(INIT_MS/TURBO_SPEED_MULT):INIT_MS);
   window._pendingChainStart=()=>{ clearTimeout(chainTimer); startChain(); };
 }
 
