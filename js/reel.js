@@ -224,7 +224,8 @@ class RC{
        ez() starts at speed = c1+3 = 3.3 in normalised units.
        decelDur = 3.3 * totalScroll / 4.2                               */
     const baseDur=3.3*totalScroll/4.2;
-    const decelDur=tensionMode ? baseDur*2.6 : baseDur;
+    let decelDur=tensionMode ? baseDur*2.6 : baseDur;
+    if(S.turbo) decelDur=decelDur/TURBO_SPEED_MULT;
     const ctx=this.ctx,W=this.W,H=this.H,self=this;
     const t0=performance.now();
     const frame=now=>{
