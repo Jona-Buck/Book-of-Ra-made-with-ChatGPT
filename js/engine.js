@@ -63,7 +63,7 @@ function chainStop(r,fg,done){
 }
 
 function spin(){
-  if(S.sp){ if(S.turbo) skipCurrentSpin(); return; }
+  if(S.sp){ skipCurrentSpin(); return; }
   window._skipSpin=false; /* frischer Spin startet immer ungeskippt */
   if(typeof forceCloseWinUI==='function') forceCloseWinUI(); /* alte Gewinnlinien/Zähler/Lottie sofort beenden */
   const bet=S.ln*BETS[S.bi];
@@ -75,10 +75,10 @@ function spin(){
   }
   S.sp=true;S.win=0;
   document.getElementById('dwin').classList.remove('won');
-  /* Ohne Turbo-Modus verhält sich der Button wie im Original: während des
-     Spins deaktiviert. Mit Turbo bleibt er aktiv, damit ein erneuter Klick
-     den laufenden Spin skippen kann (siehe skipCurrentSpin()). */
-  document.getElementById('spin').disabled=!S.turbo;
+  /* Button bleibt WÄHREND jedes Spins aktiv (Normal wie Turbo) — ein
+     erneuter Klick skippt immer den laufenden Spin (siehe skipCurrentSpin()).
+     Ein disabled-Button würde diesen Klick gar nicht erst registrieren. */
+  document.getElementById('spin').disabled=false;
   const g5b=document.getElementById('g5050');
   g5b.disabled=true; g5b.classList.remove('ready');
   document.querySelectorAll('.cell.win').forEach(c=>c.classList.remove('win'));
