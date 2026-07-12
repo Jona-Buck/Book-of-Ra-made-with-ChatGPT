@@ -79,9 +79,7 @@ html,body{width:100%;height:100%;background:#000;display:flex;align-items:center
 #auto{width:clamp(36px,6vw,58px);height:clamp(36px,6vw,58px);border-radius:50%;flex-shrink:0;cursor:pointer;border:1.5px solid #3A2808;background:#0A0600;color:#5A3810;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .15s}
 #auto:hover{border-color:#C8A030;color:#C8A030}
 #auto.on{border-color:#C8A030;color:#F0CB50;background:rgba(200,160,48,.08)}
-#turbo{width:clamp(36px,6vw,58px);height:clamp(36px,6vw,58px);border-radius:50%;flex-shrink:0;cursor:pointer;border:1.5px solid #3A2808;background:#0A0600;color:#5A3810;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:clamp(16px,3vw,22px)}
-#turbo:hover{border-color:#C8A030;color:#C8A030}
-#turbo.on{border-color:#FFD23C;color:#FFD23C;background:rgba(255,210,60,.12);box-shadow:0 0 10px rgba(255,210,60,.4)}
+#turbo.on{border-color:#FFD23C;color:#FFD23C;background:rgba(255,210,60,.15);box-shadow:0 0 8px rgba(255,210,60,.4)}
 .ai{font-size:clamp(15px,2.5vw,24px)}
 .al{font-size:clamp(5px,.75vw,7px);letter-spacing:.06em}
 
