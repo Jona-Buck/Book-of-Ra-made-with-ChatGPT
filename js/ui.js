@@ -15,6 +15,12 @@ function buildPT(){
 document.getElementById('bm').onclick=()=>{if(S.bi>0){S.bi--;ui();}};
 document.getElementById('bp').onclick=()=>{if(S.bi<BETS.length-1){S.bi++;ui();}};
 document.getElementById('spin').onclick=spin;
+document.getElementById('turbo').onclick=()=>{
+  S.turbo=!S.turbo;
+  document.getElementById('turbo').classList.toggle('on',S.turbo);
+  localStorage.setItem('boraTurbo',S.turbo?'1':'0');
+};
+if(S.turbo) document.getElementById('turbo').classList.add('on'); /* gespeicherte Einstellung übernehmen */
 document.getElementById('auto').onclick=()=>{
   if(S.auto){S.auto=false;S.aN=0;document.getElementById('auto').classList.remove('on');}
   else{S.auto=true;S.aN=25;document.getElementById('auto').classList.add('on');if(!S.sp)spin();}
