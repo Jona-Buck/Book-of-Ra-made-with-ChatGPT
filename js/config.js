@@ -37,5 +37,10 @@ function endVisual(){window._visualsBusy=Math.max(0,window._visualsBusy-1);}
 window._skipSpin=false;
 const SKIP_TIME_MULT=6;
 
+/* Turbo-Modus (Blitz-Button): macht JEDEN Spin grundsätzlich schneller —
+   kürzere Anfangsdrehzeit, kürzere Pausen zwischen Walzenstopps, schnelleres
+   Abbremsen. Unabhängig vom manuellen Skip-per-Reklick (SKIP_TIME_MULT). */
+const TURBO_SPEED_MULT=2.6;
+
 /* ── Pre-load all symbol images into Image objects ── */
 const PIMG={};
