@@ -76,6 +76,27 @@ function _tier(tot){
   return{label:'',coins:1,cls:''};
 }
 
+/* ── Alles sofort beenden was noch von einer vorherigen Gewinn-Präsentation
+   übrig sein könnte (Linien, Zähler, Lottie-Overlay) — wird von spin()
+   aufgerufen bevor ein neuer Spin startet, damit sich nichts mit den neu
+   startenden Walzen überschneidet. */
+function forceCloseWinUI(){
+  _ws++; /* invalidiert jede noch laufende next()-Kette aus showWinSequence */
+  _clearCvs();
+  const ctr=document.getElementById('winctr');
+  if(ctr) ctr.classList.remove('open');
+  const skip=document.getElementById('winskip');
+  if(skip){ skip.classList.remove('active'); skip.onclick=null; }
+  const ov=document.getElementById('bigwinov');
+  if(ov && ov.classList.contains('open')){
+    ov.classList.remove('open'); ov.onclick=null;
+    if(_lC){_lC.destroy();_lC=null;}
+    if(_lL){_lL.destroy();_lL=null;}
+    const cDiv=document.getElementById('bigwin-coins');
+    if(cDiv) cDiv.innerHTML='';
+  }
+}
+
 /* ── Hauptfunktion ── */
 function showWinSequence(winData,tot){
   _ws++;const myWs=_ws;
