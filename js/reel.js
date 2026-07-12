@@ -225,7 +225,7 @@ class RC{
        decelDur = 3.3 * totalScroll / 4.2                               */
     const baseDur=3.3*totalScroll/4.2;
     let decelDur=tensionMode ? baseDur*2.6 : baseDur;
-    if(S.turbo) decelDur=decelDur/TURBO_SPEED_MULT;
+    if(S.turbo) decelDur=decelDur/TURBO_STOP_MULT;
     const ctx=this.ctx,W=this.W,H=this.H,self=this;
     const t0=performance.now();
     const frame=now=>{
