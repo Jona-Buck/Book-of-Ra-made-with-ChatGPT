@@ -54,7 +54,8 @@ function chainStop(r,fg,done){
      Tension reels keep the gap so the drama builds visibly.
      Bei aktivem Skip: kein Gap mehr, alle restlichen Walzen folgen sofort. */
   if(r<4){
-    const gap=window._skipSpin?0:(tension?STOP_GAP*4:STOP_GAP);
+    const normalGap=tension?STOP_GAP*4:STOP_GAP;
+    const gap=window._skipSpin?Math.max(30,Math.round(normalGap/SKIP_TIME_MULT)):normalGap;
     setTimeout(()=>chainStop(r+1,fg,done), gap);
   }
 }
@@ -62,6 +63,7 @@ function chainStop(r,fg,done){
 function spin(){
   if(S.sp){ skipCurrentSpin(); return; }
   window._skipSpin=false; /* frischer Spin startet immer ungeskippt */
+  if(typeof forceCloseWinUI==='function') forceCloseWinUI(); /* alte Gewinnlinien/Zähler/Lottie sofort beenden */
   const bet=S.ln*BETS[S.bi];
   if(!S.fs&&S.bal<bet){
     flashE('dbal');
