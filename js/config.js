@@ -29,5 +29,12 @@ window._visualsBusy=0;
 function beginVisual(){window._visualsBusy++;}
 function endVisual(){window._visualsBusy=Math.max(0,window._visualsBusy-1);}
 
+/* ── Turbo/Skip-Modus ──
+   Beim erneuten Spin-Klick während ein Spin läuft: statt eines harten
+   Instant-Sprungs laufen Walzen/Morph/Gewinnlinien im Zeitraffer ab
+   (SKIP_TIME_MULT× schneller) — kurze, aber sichtbare Mini-Animation. */
+window._skipSpin=false;
+const SKIP_TIME_MULT=6;
+
 /* ── Pre-load all symbol images into Image objects ── */
 const PIMG={};
