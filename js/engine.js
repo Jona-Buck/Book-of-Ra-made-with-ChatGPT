@@ -56,7 +56,7 @@ function chainStop(r,fg,done){
      zusätzlich noch weiter (die beiden Effekte stapeln sich). */
   if(r<4){
     let gap=tension?STOP_GAP*4:STOP_GAP;
-    if(S.turbo) gap=gap/TURBO_SPEED_MULT;
+    if(S.turbo) gap=gap/TURBO_STOP_MULT;
     if(window._skipSpin) gap=Math.max(30,gap/SKIP_TIME_MULT);
     setTimeout(()=>chainStop(r+1,fg,done), Math.round(gap));
   }
@@ -156,9 +156,9 @@ function spin(){
      if the player clicks Spin again while reels are still fast-spinning. */
   const startChain=()=>{
     window._pendingChainStart=null;
-    chainStop(0,fg,()=>setTimeout(evalW, window._skipSpin?0:(S.turbo?Math.round(180/TURBO_SPEED_MULT):180)));
+    chainStop(0,fg,()=>setTimeout(evalW, window._skipSpin?0:(S.turbo?Math.round(180/TURBO_STOP_MULT):180)));
   };
-  const chainTimer=setTimeout(startChain, S.turbo?Math.round(INIT_MS/TURBO_SPEED_MULT):INIT_MS);
+  const chainTimer=setTimeout(startChain, S.turbo?Math.round(INIT_MS/TURBO_INIT_MULT):INIT_MS);
   window._pendingChainStart=()=>{ clearTimeout(chainTimer); startChain(); };
 }
 
