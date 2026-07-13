@@ -90,7 +90,7 @@ function forceCloseWinUI(){
   const ov=document.getElementById('bigwinov');
   if(ov && ov.classList.contains('open')){
     ov.classList.remove('open'); ov.onclick=null;
-    if(_lC){_lC.destroy();_lC=null;}
+    _lCoins.forEach(inst=>{ try{inst.destroy();}catch(e){} }); _lCoins=[];
     if(_lL){_lL.destroy();_lL=null;}
     const cDiv=document.getElementById('bigwin-coins');
     if(cDiv) cDiv.innerHTML='';
@@ -152,7 +152,7 @@ function showWinSequence(winData,tot){
 }
 
 /* ── Lottie-Overlay mit Tier + Gewinnbetrag ── */
-let _lC=null,_lL=null;
+let _lCoins=[],_lL=null; /* _lCoins: ALLE Münzregen-Instanzen (können mehrere gleichzeitig sein) */
 function _startLottie(tot,onDone){
   const ov=document.getElementById('bigwinov');
   if(!ov){ if(onDone)onDone(); return; }
@@ -167,6 +167,11 @@ function _startLottie(tot,onDone){
   amtEl.textContent='0,00 €';
   ov.classList.add('open');
 
+  /* Defensiv: falls von einem vorherigen Aufruf noch Instanzen offen sind
+     (sollte durch close() eigentlich nie passieren) sicherheitshalber räumen */
+  _lCoins.forEach(inst=>{ try{inst.destroy();}catch(e){} });
+  _lCoins=[];
+
   /* Münzregen zuerst (hinter allem) */
   if(typeof lottie!=='undefined'){
     for(let i=0;i<tier.coins;i++){
@@ -175,7 +180,7 @@ function _startLottie(tot,onDone){
         wrap.style.cssText='position:absolute;inset:0;';
         cDiv.appendChild(wrap);
         const lc=lottie.loadAnimation({container:wrap,renderer:'svg',loop:false,autoplay:true,animationData:LOTTIE_COINS});
-        if(_lC)_lC=lc; else _lC=lc;
+        _lCoins.push(lc); /* JEDE Instanz tracken, nicht nur die letzte */
       },i*180);
     }
     /* Lichtbogen danach (vorne) */
@@ -192,7 +197,9 @@ function _startLottie(tot,onDone){
   function close(){
     if(_closed)return; _closed=true;
     ov.classList.remove('open');ov.onclick=null;
-    if(_lC){_lC.destroy();_lC=null;}if(_lL){_lL.destroy();_lL=null;}
+    _lCoins.forEach(inst=>{ try{inst.destroy();}catch(e){} }); /* ALLE Münz-Instanzen zerstören */
+    _lCoins=[];
+    if(_lL){_lL.destroy();_lL=null;}
     cDiv.innerHTML='';
     if(onDone)onDone();
   }
