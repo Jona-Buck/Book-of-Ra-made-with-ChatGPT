@@ -252,6 +252,8 @@ function evalW(){
 
   /* ── Sofort abschließen ── */
   ui();
+  if(typeof trackSpin==='function') trackSpin();
+  if(typeof trackBalanceSnapshot==='function') trackBalanceSnapshot(S.bal);
   S.sp=false; document.getElementById('spin').disabled=false;
   const g5=document.getElementById('g5050');
   if(tot>0&&!S.fs&&!S.auto){ g5.disabled=false; g5.classList.add('ready'); }
