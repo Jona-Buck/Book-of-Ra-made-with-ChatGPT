@@ -138,6 +138,7 @@ function _friendlyAuthError(e){
 function _setupPlayer(user, nameOverride){
   _playerRef = firebase.database().ref("players/"+user.uid);
   window._fbPlayerRef = _playerRef;
+  _initChatWidget();
 
   _playerRef.on("value", snap=>{
     const d = snap.val();
@@ -270,6 +271,106 @@ function _showAuthPrompt(){
     };
   }
   ov.classList.add('open');
+}
+
+/* ══════════════════════════════════════════════════════════
+   STATISTIK-TRACKING (echte Daten für Admin-Dashboard)
+   ══════════════════════════════════════════════════════════ */
+function trackSpin(){
+  const user = firebase.auth().currentUser;
+  if(!user || !_playerRef) return;
+  const today = new Date().toISOString().slice(0,10); /* YYYY-MM-DD */
+  const updates = {};
+  updates['players/'+user.uid+'/spinsCount'] = firebase.database.ServerValue.increment(1);
+  updates['players/'+user.uid+'/activityByDay/'+today] = firebase.database.ServerValue.increment(1);
+  firebase.database().ref().update(updates).catch(()=>{});
+}
+
+let _lastLoggedBalance=null;
+function trackBalanceSnapshot(bal){
+  if(!_playerRef || _lastLoggedBalance===bal) return;
+  _lastLoggedBalance=bal;
+  _playerRef.child('balanceHistory').push({t:Date.now(),bal}).catch(()=>{});
+  if(Math.random()<0.05) _trimBalanceHistory(); /* gelegentlich aufräumen statt bei jedem Eintrag */
+}
+
+function _trimBalanceHistory(){
+  if(!_playerRef) return;
+  _playerRef.child('balanceHistory').once('value').then(snap=>{
+    const d=snap.val(); if(!d) return;
+    const keys=Object.keys(d).sort(); /* Push-Keys sind chronologisch sortierbar */
+    if(keys.length<=200) return;
+    const updates={};
+    keys.slice(0,keys.length-200).forEach(k=>updates[k]=null);
+    _playerRef.child('balanceHistory').update(updates).catch(()=>{});
+  }).catch(()=>{});
+}
+
+/* ══════════════════════════════════════════════════════════
+   SUPPORT-CHAT (Spieler ↔ Admin)
+   ══════════════════════════════════════════════════════════ */
+function _escChat(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function _initChatWidget(){
+  if(document.getElementById('chatBtn')) return; /* nur einmal aufbauen */
+
+  const btn=document.createElement('button');
+  btn.id='chatBtn'; btn.innerHTML='💬<span id="chatBadge"></span>';
+  document.body.appendChild(btn);
+
+  const panel=document.createElement('div');
+  panel.id='chatPanel';
+  panel.innerHTML=`
+    <div id="chatHead">💬 Support-Chat <span id="chatClose">✕</span></div>
+    <div id="chatMsgs"></div>
+    <div id="chatInputRow">
+      <input type="text" id="chatInput" placeholder="Nachricht schreiben…" maxlength="500">
+      <button id="chatSend">➤</button>
+    </div>`;
+  document.body.appendChild(panel);
+
+  const badge=document.getElementById('chatBadge');
+  let isOpen=false;
+
+  function markRead(){
+    if(_playerRef) _playerRef.child('lastReadByPlayer').set(Date.now()).catch(()=>{});
+    badge.classList.remove('show');
+  }
+  function toggle(){
+    isOpen=!isOpen;
+    panel.classList.toggle('open',isOpen);
+    if(isOpen) markRead();
+  }
+  btn.onclick=toggle;
+  document.getElementById('chatClose').onclick=toggle;
+
+  function send(){
+    const inp=document.getElementById('chatInput');
+    const text=inp.value.trim();
+    if(!text||!_playerRef) return;
+    _playerRef.child('chat').push({from:'player',text,t:Date.now()}).catch(()=>{});
+    inp.value='';
+  }
+  document.getElementById('chatSend').onclick=send;
+  document.getElementById('chatInput').onkeydown=e=>{ if(e.key==='Enter') send(); };
+
+  if(_playerRef){
+    _playerRef.child('chat').on('value', snap=>{
+      const d=snap.val()||{};
+      const msgs=Object.values(d).sort((a,b)=>a.t-b.t);
+      const cont=document.getElementById('chatMsgs');
+      cont.innerHTML=msgs.map(m=>
+        `<div class="chatMsg ${m.from==='admin'?'from-admin':'from-player'}">${_escChat(m.text)}</div>`
+      ).join('') || '<div id="chatEmpty">Noch keine Nachrichten. Schreib uns gern!</div>';
+      cont.scrollTop=cont.scrollHeight;
+
+      _playerRef.child('lastReadByPlayer').once('value').then(lrSnap=>{
+        const lastRead=lrSnap.val()||0;
+        const hasUnread=msgs.some(m=>m.from==='admin'&&m.t>lastRead);
+        badge.classList.toggle('show', hasUnread && !isOpen);
+      });
+    });
+  }
 }
 
 function initPlayerPersistence(){
