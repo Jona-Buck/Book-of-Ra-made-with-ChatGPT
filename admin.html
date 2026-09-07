@@ -1,173 +1,342 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Book of Ra — Admin</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#0a0a0f;color:#e8d5a3;font-family:'Segoe UI',sans-serif;min-height:100vh}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Book of Ra — Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0f;color:#e8d5a3;font-family:'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#3a2f1a;border-radius:4px}
 
-    #login{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:1.2rem}
-    #login h1{font-size:1.8rem;color:#ffd700;letter-spacing:.15em}
-    #login input{background:#1a1a2e;border:1px solid #ffd70066;color:#fff;padding:.7em 1.2em;border-radius:.4em;font-size:1rem;width:260px;outline:none}
-    #login input:focus{border-color:#ffd700}
-    #login button{background:#ffd700;color:#000;border:none;padding:.7em 2em;border-radius:.4em;font-size:1rem;font-weight:700;cursor:pointer}
-    .err-msg{color:#ff4444;font-size:.9rem;min-height:1.2em}
+/* ── Login-Gate ── */
+#loginGate{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:1.2rem;text-align:center;padding:1rem}
+#loginGate h1{font-size:1.8rem;color:#ffd700;letter-spacing:.12em}
+#loginGate p{color:#998868;max-width:340px;font-size:.9rem;line-height:1.5}
+.gbtn{background:#fff;color:#3c4043;border:none;padding:.8em 1.6em;border-radius:.5em;font-size:.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.6em}
+.gbtn:hover{filter:brightness(.97)}
+#deniedBox{display:none;background:#1a0d0d;border:1px solid #ff444455;border-radius:.6em;padding:1.2rem;max-width:420px}
+#deniedBox code{display:block;background:#000;padding:.6em;border-radius:.4em;margin-top:.6em;font-size:.78rem;word-break:break-all;color:#ffaa44;user-select:all}
+#loadingGate{color:#665;font-size:.85rem}
 
-    #panel{display:none;max-width:740px;margin:0 auto;padding:2rem 1rem 4rem}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid #ffd70033}
-    header h1{font-size:1.3rem;color:#ffd700;letter-spacing:.1em}
-    #conn{font-size:.8rem;padding:.25em .75em;border-radius:2em;background:#333;transition:background .3s}
-    #conn.ok{background:#1a4a1a;color:#4dff4d}
-    #conn.err{background:#4a1a1a;color:#ff4d4d}
+/* ── App-Shell ── */
+#app{display:none;min-height:100vh}
+#sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:220px;background:#0d0d18;
+  border-right:1px solid #ffd70022;display:flex;flex-direction:column;z-index:50;
+}
+#sidebar .brand{padding:1.4rem 1.2rem 1rem;font-size:1.05rem;font-weight:700;color:#ffd700;letter-spacing:.08em;border-bottom:1px solid #ffd70022}
+.navlist{list-style:none;padding:1rem 0;flex:1}
+.navitem{
+  display:flex;align-items:center;gap:.7em;padding:.75em 1.2em;color:#998868;
+  cursor:pointer;font-size:.9rem;transition:background .15s,color .15s;position:relative;
+}
+.navitem:hover{background:#ffd70011;color:#e8d5a3}
+.navitem.active{color:#ffd700;background:#ffd70016;border-left:3px solid #ffd700}
+.navitem .navbadge{margin-left:auto;background:#ff4444;color:#fff;font-size:.68rem;padding:.1em .5em;border-radius:1em}
+#sidebar .userbox{padding:1rem 1.2rem;border-top:1px solid #ffd70022;display:flex;align-items:center;gap:.6em;font-size:.8rem}
+#sidebar .userbox img{width:28px;height:28px;border-radius:50%}
+#sidebar .userbox .uname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#c8b080}
+#logoutBtn{background:none;border:1px solid #55483C;color:#998868;border-radius:.3em;padding:.3em .6em;font-size:.75rem;cursor:pointer;width:auto}
+#logoutBtn:hover{border-color:#ff6666;color:#ff8888}
 
-    .card{background:#111122;border:1px solid #ffd70022;border-radius:.7em;padding:1.4rem;margin-bottom:1.4rem}
-    .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem}
-    .card h2{font-size:.9rem;color:#ffd700;letter-spacing:.1em;text-transform:uppercase}
+#main{margin-left:220px;padding:1.6rem 2rem 3rem;max-width:1200px}
+#topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.6rem;flex-wrap:wrap;gap:.6rem}
+#topbar h1{font-size:1.3rem;color:#ffd700;letter-spacing:.05em}
+#conn{font-size:.78rem;padding:.25em .75em;border-radius:2em;background:#333}
+#conn.ok{background:#1a4a1a;color:#4dff4d}
+#conn.err{background:#4a1a1a;color:#ff4d4d}
 
-    .sym-row{display:grid;grid-template-columns:110px 1fr 38px 52px;align-items:center;gap:.6rem;margin-bottom:.6rem}
-    .sym-row label{font-size:.83rem;color:#c8b080}
-    .sym-row input[type=range]{accent-color:#ffd700;cursor:pointer}
-    .sym-row .val{text-align:right;font-size:.9rem;color:#fff;font-weight:700}
-    .sym-row .pct{text-align:right;font-size:.75rem;color:#888}
+/* Mobile: bottom tab bar instead of sidebar */
+#mobileNav{display:none}
+@media (max-width:820px){
+  #sidebar{display:none}
+  #main{margin-left:0;padding:1rem 1rem 5rem}
+  #mobileNav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;height:60px;
+    background:#0d0d18;border-top:1px solid #ffd70022;z-index:50;
+  }
+  #mobileNav .navitem{flex:1;flex-direction:column;justify-content:center;gap:.2em;font-size:.68rem;border-left:none!important;padding:.4em}
+  #mobileNav .navitem.active{background:#ffd70016}
+}
 
-    .btn{border:none;padding:.8em 1em;border-radius:.45em;font-size:.9rem;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:transform .1s,filter .1s;width:100%}
-    .btn:hover{filter:brightness(1.15)}
-    .btn:active{transform:scale(.96)}
-    .btn-sm{padding:.5em .9em;font-size:.82rem;width:auto}
-    .btn-reset{background:#2a1a00;color:#ffaa44;border:1px solid #ffaa4444}
-    .btn-green {background:#0d3d1a;color:#44ff88;border:1px solid #44ff8844}
-    .btn-gold  {background:#3d2a00;color:#ffd700;border:1px solid #ffd70044}
-    .btn-purple{background:#2a0d3d;color:#cc88ff;border:1px solid #cc88ff44}
-    .btn-red   {background:#3d0d0d;color:#ff6666;border:1px solid #ff666644}
+/* ── Cards & Grid ── */
+.view{display:none}
+.view.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.9rem;margin-bottom:1.6rem}
+.kpi{background:#111122;border:1px solid #ffd70022;border-radius:.6em;padding:1.1rem}
+.kpi .kn{font-size:1.6rem;font-weight:700;color:#ffd700}
+.kpi .kl{font-size:.75rem;color:#998868;margin-top:.2rem;text-transform:uppercase;letter-spacing:.04em}
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.2rem;margin-bottom:1.6rem}
+.card{background:#111122;border:1px solid #ffd70022;border-radius:.7em;padding:1.3rem}
+.card h3{font-size:.85rem;color:#ffd700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1rem}
+.card canvas{max-height:220px}
 
-    .evt-grid{display:flex;flex-direction:column;gap:.75rem}
+/* ── Spieler-Liste ── */
+#playerSearch{
+  width:100%;background:#0a0a1a;border:1px solid #ffd70033;border-radius:.5em;
+  color:#fff;padding:.7em 1em;font-size:.9rem;margin-bottom:1rem;outline:none;
+}
+#playerSearch:focus{border-color:#ffd700}
+.ptable{width:100%;border-collapse:collapse;font-size:.85rem}
+.ptable th{text-align:left;color:#998868;font-weight:600;padding:.5em .7em;border-bottom:1px solid #ffd70022;font-size:.75rem;text-transform:uppercase;letter-spacing:.03em}
+.ptable td{padding:.6em .7em;border-bottom:1px solid #ffffff0a}
+.ptable tr{cursor:pointer;transition:background .1s}
+.ptable tr:hover{background:#ffd70010}
+.ptable .pname{font-weight:700;color:#ffd700}
+.ptable .pbal{color:#44ff88;font-weight:700}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:.4em}
+.dot.on{background:#44ff88;box-shadow:0 0 6px #44ff88}
+.dot.off{background:#555}
+.unread-pill{background:#ff4444;color:#fff;font-size:.68rem;padding:.1em .5em;border-radius:1em;margin-left:.4em}
 
-    #symPickerWrap{display:none;margin-top:.8rem;padding:.9rem;background:#0a0a1a;border-radius:.5em;border:1px solid #ffd70022}
-    #symPickerWrap label{display:block;font-size:.8rem;color:#888;margin-bottom:.5rem}
-    #symPicker{display:flex;flex-wrap:wrap;gap:.5rem}
-    .sym-opt{background:#1a1a2e;border:1px solid #ffd70033;color:#e8d5a3;padding:.4em .8em;border-radius:.3em;cursor:pointer;font-size:.85rem;transition:background .15s}
-    .sym-opt:hover{background:#2a2a4e}
-    .sym-opt.active{background:#3d2a00;border-color:#ffd700;color:#ffd700}
+/* ── Chat-Übersicht ── */
+.chat-row{
+  display:flex;align-items:center;gap:.8em;padding:.8em 1em;background:#111122;
+  border:1px solid #ffd70022;border-radius:.5em;margin-bottom:.5em;cursor:pointer;transition:background .15s;
+}
+.chat-row:hover{background:#ffd70012}
+.chat-row .cname{font-weight:700;color:#ffd700;flex:1}
+.chat-row .cpreview{color:#887;font-size:.8rem;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-row .ctime{color:#665;font-size:.72rem}
 
-    #status{text-align:center;font-size:.85rem;color:#888;min-height:1.4em;margin-top:.8rem;transition:color .2s}
-    #status.ok{color:#44ff88}
-    #status.fail{color:#ff4444}
+/* ── Drawer (Spieler-Detail) ── */
+#drawerOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200}
+#drawerOverlay.open{display:block}
+#drawer{
+  position:fixed;top:0;right:-480px;bottom:0;width:460px;max-width:92vw;
+  background:#0d0d18;border-left:1px solid #ffd70033;z-index:201;
+  transition:right .25s ease;display:flex;flex-direction:column;
+}
+#drawer.open{right:0}
+#drawerHead{padding:1.2rem 1.4rem;border-bottom:1px solid #ffd70022;display:flex;align-items:center;gap:.8em}
+#drawerHead img{width:40px;height:40px;border-radius:50%}
+#drawerHead .dtitle{flex:1}
+#drawerHead .dname{font-weight:700;color:#ffd700;font-size:1rem}
+#drawerHead .dmeta{font-size:.75rem;color:#887}
+#drawerClose{background:none;border:none;color:#998868;font-size:1.2rem;cursor:pointer;width:auto}
+#drawerClose:hover{color:#ffd700}
+#drawerTabs{display:flex;border-bottom:1px solid #ffd70022}
+.dtab{flex:1;text-align:center;padding:.8em;font-size:.82rem;color:#887;cursor:pointer;border-bottom:2px solid transparent}
+.dtab.active{color:#ffd700;border-bottom-color:#ffd700}
+#drawerBody{flex:1;overflow-y:auto;padding:1.2rem 1.4rem}
+.dpane{display:none}
+.dpane.active{display:block}
 
-    /* Ziel-Anzeige über den Event-Buttons */
-    #targetBar{
-      display:flex;align-items:center;justify-content:space-between;
-      background:#0a0a1a;border:1px solid #ffd70033;border-radius:.5em;
-      padding:.6em 1em;margin-bottom:1rem;font-size:.85rem;
-    }
-    #targetBar.active{border-color:#44ff8866;background:#0a1a0f}
-    #targetLabel{color:#c8b080}
-    #targetLabel b{color:#ffd700}
-    #targetBar.active #targetLabel b{color:#44ff88}
-    #targetClear{display:none;background:none;border:1px solid #ff666655;color:#ff8888;
-                 padding:.3em .8em;border-radius:.35em;font-size:.78rem;cursor:pointer;width:auto}
-    #targetBar.active #targetClear{display:inline-block}
+.infoRow{display:flex;justify-content:space-between;padding:.5em 0;border-bottom:1px solid #ffffff0a;font-size:.85rem}
+.infoRow span:first-child{color:#887}
+.infoRow span:last-child{color:#e8d5a3;text-align:right;max-width:60%;word-break:break-word}
 
-    /* Spieler-Liste */
-    #playersList{display:flex;flex-direction:column;gap:.6rem;max-height:420px;overflow-y:auto}
-    .player-row{
-      background:#0a0a1a;border:1px solid #ffd70022;border-radius:.5em;
-      padding:.8em 1em;font-size:.82rem;
-    }
-    .player-row.selected{border-color:#44ff8866;background:#0a1a0f}
-    .player-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4em}
-    .player-name{font-weight:700;color:#ffd700;font-size:.95rem}
-    .player-bal{color:#44ff88;font-weight:700}
-    .player-meta{color:#888;font-size:.76rem;line-height:1.5}
-    .player-meta span{color:#c8b080}
-    .player-actions{margin-top:.6em;display:flex;gap:.5em}
-    .btn-target{background:#1a1a2e;color:#ffd700;border:1px solid #ffd70044;
-                padding:.4em .9em;border-radius:.35em;font-size:.78rem;cursor:pointer;width:auto}
-    .btn-target:hover{background:#2a2a4e}
-    .btn-target.is-target{background:#0d3d1a;color:#44ff88;border-color:#44ff8866}
-    #playersEmpty{color:#555;font-size:.85rem;text-align:center;padding:1rem}
-  </style>
+#balEditRow{display:flex;gap:.5em;margin-top:.8rem}
+#balEditInput{flex:1;background:#241A10;border:1px solid #55483C;border-radius:.4em;color:#fff;padding:.5em .8em;font-size:.9rem}
+#balEditSave{background:linear-gradient(160deg,#FFD23C,#C89020);color:#241800;border:none;border-radius:.4em;padding:0 1em;font-weight:700;cursor:pointer;width:auto}
+
+.evt-grid-d{display:flex;flex-direction:column;gap:.6rem;margin-top:.8rem}
+.btn{border:none;padding:.75em 1em;border-radius:.45em;font-size:.85rem;font-weight:700;cursor:pointer;letter-spacing:.03em;transition:filter .1s;width:100%}
+.btn:hover{filter:brightness(1.15)}
+.btn-green {background:#0d3d1a;color:#44ff88;border:1px solid #44ff8844}
+.btn-gold  {background:#3d2a00;color:#ffd700;border:1px solid #ffd70044}
+.btn-purple{background:#2a0d3d;color:#cc88ff;border:1px solid #cc88ff44}
+.btn-red   {background:#3d0d0d;color:#ff6666;border:1px solid #ff666644}
+.btn-reset{background:#2a1a00;color:#ffaa44;border:1px solid #ffaa4444}
+.btn-sm{padding:.5em .9em;font-size:.78rem;width:auto}
+
+#symPickerWrap{display:none;margin-top:.6rem;padding:.8rem;background:#0a0a1a;border-radius:.5em;border:1px solid #ffd70022}
+#symPickerWrap label{display:block;font-size:.78rem;color:#887;margin-bottom:.5rem}
+#symPicker{display:flex;flex-wrap:wrap;gap:.5rem}
+.sym-opt{background:#1a1a2e;border:1px solid #ffd70033;color:#e8d5a3;padding:.4em .8em;border-radius:.3em;cursor:pointer;font-size:.82rem}
+.sym-opt:hover{background:#2a2a4e}
+.sym-opt.active{background:#3d2a00;border-color:#ffd700;color:#ffd700}
+
+/* Chat innerhalb Drawer */
+#dChatMsgs{display:flex;flex-direction:column;gap:.5em;max-height:320px;overflow-y:auto;margin-bottom:.8rem;padding-right:.3em}
+.chatMsg{max-width:82%;padding:.5em .8em;border-radius:10px;font-size:.85rem;line-height:1.4;word-wrap:break-word}
+.chatMsg.from-player{align-self:flex-start;background:#1a1a2e;color:#E8E4D8;border-bottom-left-radius:2px}
+.chatMsg.from-admin{align-self:flex-end;background:#3d2a00;color:#FFD23C;border-bottom-right-radius:2px}
+#dChatInputRow{display:flex;gap:.5em}
+#dChatInputRow input{flex:1;background:#241A10;border:1px solid #55483C;border-radius:.4em;color:#fff;padding:.6em .8em;font-size:.85rem}
+#dChatInputRow button{background:linear-gradient(160deg,#FFD23C,#C89020);color:#241800;border:none;border-radius:.4em;padding:0 1em;font-weight:700;cursor:pointer;width:auto}
+
+/* ── Gewichte (Einstellungen) ── */
+.sym-row{display:grid;grid-template-columns:110px 1fr 38px 52px;align-items:center;gap:.6rem;margin-bottom:.6rem}
+.sym-row label{font-size:.83rem;color:#c8b080}
+.sym-row input[type=range]{accent-color:#ffd700;cursor:pointer}
+.sym-row .val{text-align:right;font-size:.9rem;color:#fff;font-weight:700}
+.sym-row .pct{text-align:right;font-size:.75rem;color:#888}
+
+#status{text-align:center;font-size:.85rem;color:#888;min-height:1.4em;margin-top:.8rem}
+#status.ok{color:#44ff88}
+#status.fail{color:#ff4444}
+</style>
 </head>
 <body>
 
-<div id="login">
+<!-- ═══ LOGIN-GATE ═══ -->
+<div id="loginGate">
   <h1>⚙ ADMIN</h1>
-  <input type="password" id="pw" placeholder="Passwort"
-         onkeydown="if(event.key==='Enter')doLogin()">
-  <button onclick="doLogin()">Einloggen</button>
-  <div class="err-msg" id="loginErr"></div>
+  <p>Diese Seite ist nur für autorisierte Administratoren zugänglich. Melde dich mit deinem Google-Konto an.</p>
+  <button class="gbtn" id="googleLoginBtn">
+    <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.6H24v9h11.8c-.5 2.7-2 5-4.4 6.5v5.4h7.1c4.2-3.9 6.6-9.6 6.6-16.3z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-7.1-5.4c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.6C8.1 41 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.8 28.4c-.4-1.3-.7-2.7-.7-4.4s.3-3.1.7-4.4v-5.6H4.5C3 17 2 20.4 2 24s1 7 4.5 9.9l7.3-5.5z"/><path fill="#EA4335" d="M24 10.7c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.2 29.9 2 24 2 15.4 2 8.1 7 4.5 14.1l7.3 5.6c1.7-5.2 6.5-9 12.2-9z"/></svg>
+    Mit Google anmelden
+  </button>
+  <div id="loadingGate"></div>
+  <div id="deniedBox">
+    <div style="color:#ff6666;font-weight:700;margin-bottom:.4rem">Kein Admin-Zugriff</div>
+    <div style="font-size:.85rem;color:#c8b080">Dieses Konto ist noch nicht als Admin freigeschaltet. Füge folgende UID in der Firebase-Konsole unter <code style="display:inline;padding:.1em .3em">admins/&lt;UID&gt;: true</code> hinzu:</div>
+    <code id="deniedUid"></code>
+  </div>
 </div>
 
-<div id="panel">
-  <header>
-    <h1>📊 Book of Ra — Admin</h1>
-    <span id="conn" class="err">⬤ Offline</span>
-  </header>
-
-  <div class="card">
-    <div class="card-header">
-      <h2>🎰 Symbol-Wahrscheinlichkeiten</h2>
-      <button class="btn btn-sm btn-reset" onclick="resetWeights()">↺ Reset</button>
-    </div>
-    <div id="sliders"></div>
-    <div style="text-align:right;font-size:.75rem;color:#555;margin-top:.4rem">
-      Summe immer 100% · Schieber passen sich automatisch an
+<!-- ═══ APP-SHELL ═══ -->
+<div id="app">
+  <div id="sidebar">
+    <div class="brand">📊 BOOK OF RA</div>
+    <ul class="navlist">
+      <li class="navitem active" data-view="dashboard">📈 Dashboard</li>
+      <li class="navitem" data-view="players">👥 Spieler</li>
+      <li class="navitem" data-view="chat">💬 Chat<span class="navbadge" id="navChatBadge" style="display:none">0</span></li>
+      <li class="navitem" data-view="settings">⚙ Einstellungen</li>
+    </ul>
+    <div class="userbox">
+      <img id="adminAvatar" src="" alt="">
+      <span class="uname" id="adminName"></span>
+      <button id="logoutBtn">Logout</button>
     </div>
   </div>
 
-  <div class="card">
-    <h2 style="margin-bottom:1rem">⚡ Nächster Spin</h2>
+  <div id="mobileNav">
+    <div class="navitem active" data-view="dashboard">📈<span>Dashboard</span></div>
+    <div class="navitem" data-view="players">👥<span>Spieler</span></div>
+    <div class="navitem" data-view="chat">💬<span>Chat</span></div>
+    <div class="navitem" data-view="settings">⚙<span>Settings</span></div>
+  </div>
 
-    <div id="targetBar">
-      <span id="targetLabel">Ziel: <b>🌐 Alle Spieler</b></span>
-      <button id="targetClear" onclick="clearTarget()">✕ Zurück zu Alle</button>
+  <div id="main">
+    <div id="topbar">
+      <h1 id="viewTitle">📈 Dashboard</h1>
+      <span id="conn" class="err">⬤ Offline</span>
     </div>
 
-    <div class="evt-grid">
+    <!-- Dashboard -->
+    <div class="view active" id="view-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kn" id="kpiTotal">0</div><div class="kl">Registrierte Spieler</div></div>
+        <div class="kpi"><div class="kn" id="kpiActive24">0</div><div class="kl">Aktiv (24h)</div></div>
+        <div class="kpi"><div class="kn" id="kpiActive7">0</div><div class="kl">Aktiv (7 Tage)</div></div>
+        <div class="kpi"><div class="kn" id="kpiSpins">0</div><div class="kl">Spins gesamt</div></div>
+        <div class="kpi"><div class="kn" id="kpiAvgBal">0 €</div><div class="kl">Ø Guthaben</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="card"><h3>Registrierungen (14 Tage)</h3><canvas id="chartReg"></canvas></div>
+        <div class="card"><h3>Aktivität — Spins pro Tag (14 Tage)</h3><canvas id="chartAct"></canvas></div>
+        <div class="card"><h3>Guthaben-Verteilung</h3><canvas id="chartBalDist"></canvas></div>
+      </div>
+    </div>
 
-      <button class="btn btn-green" onclick="setEvent('normal')">
-        🎲 Normal (kein Event aktiv)
-      </button>
+    <!-- Spieler -->
+    <div class="view" id="view-players">
+      <input type="text" id="playerSearch" placeholder="🔍 Spieler suchen (Name, E-Mail)…">
+      <div class="card" style="padding:0;overflow-x:auto">
+        <table class="ptable">
+          <thead><tr><th></th><th>Name</th><th>Guthaben</th><th>Gerät</th><th>Zuletzt aktiv</th></tr></thead>
+          <tbody id="playerTableBody"></tbody>
+        </table>
+      </div>
+    </div>
 
-      <button class="btn btn-gold" onclick="setEvent('threeBooks')">
-        📖 3 Bücher — zufällig auf 3 zufälligen Walzen / Reihen
-      </button>
+    <!-- Chat -->
+    <div class="view" id="view-chat">
+      <div id="chatOverviewList"></div>
+    </div>
 
-      <div>
-        <button class="btn btn-purple" onclick="toggleSymPicker()">
-          🌟 Ganzer Spin = bestimmtes Symbol ▾
-        </button>
-        <div id="symPickerWrap">
-          <label>Symbol auswählen:</label>
-          <div id="symPicker"></div>
+    <!-- Einstellungen -->
+    <div class="view" id="view-settings">
+      <div class="card" style="margin-bottom:1.2rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <h3 style="margin:0">🎰 Symbol-Wahrscheinlichkeiten (global)</h3>
+          <button class="btn btn-sm btn-reset" onclick="resetWeights()">↺ Reset</button>
+        </div>
+        <div id="sliders"></div>
+        <div style="text-align:right;font-size:.72rem;color:#555;margin-top:.4rem">Summe immer 100% · sofort live für alle Spieler</div>
+      </div>
+
+      <div class="card" style="margin-bottom:1.2rem">
+        <h3>⚡ Event für ALLE Spieler</h3>
+        <div class="evt-grid-d">
+          <button class="btn btn-green" onclick="setEvent('normal',null)">🎲 Normal</button>
+          <button class="btn btn-gold" onclick="setEvent('threeBooks',null)">📖 3 Bücher (zufällig)</button>
+          <button class="btn btn-purple" onclick="toggleSymPicker(null)">🌟 Symbol erzwingen ▾</button>
+          <div id="symPickerWrap"><label>Symbol wählen:</label><div id="symPicker"></div></div>
+          <button class="btn btn-red" onclick="setEvent('legendary',null)">🏆 Legendary Win</button>
         </div>
       </div>
 
-      <button class="btn btn-red" onclick="setEvent('legendary')">
-        🏆 Zufällig aussehender Legendary Win
-      </button>
+      <div class="card">
+        <h3>⚠ Gefahrenzone</h3>
+        <button class="btn btn-sm btn-reset" onclick="deleteAllPlayers()">🗑 Alle Spieler-Daten löschen</button>
+      </div>
+    </div>
 
+    <div id="status"></div>
+  </div>
+</div>
+
+<!-- ═══ SPIELER-DRAWER ═══ -->
+<div id="drawerOverlay" onclick="closeDrawer()"></div>
+<div id="drawer">
+  <div id="drawerHead">
+    <img id="dAvatar" src="" alt="">
+    <div class="dtitle">
+      <div class="dname" id="dName">–</div>
+      <div class="dmeta" id="dMeta">–</div>
+    </div>
+    <button id="drawerClose" onclick="closeDrawer()">✕</button>
+  </div>
+  <div id="drawerTabs">
+    <div class="dtab active" data-tab="profile">Profil</div>
+    <div class="dtab" data-tab="stats">Statistik</div>
+    <div class="dtab" data-tab="events">Events</div>
+    <div class="dtab" data-tab="chat">Chat</div>
+  </div>
+  <div id="drawerBody">
+    <div class="dpane active" id="pane-profile">
+      <div id="dInfoRows"></div>
+      <div style="margin-top:1rem">
+        <label style="font-size:.78rem;color:#887">Guthaben bearbeiten</label>
+        <div id="balEditRow">
+          <input type="number" id="balEditInput" step="0.01">
+          <button id="balEditSave">Speichern</button>
+        </div>
+      </div>
+    </div>
+    <div class="dpane" id="pane-stats">
+      <div class="card" style="margin-bottom:1rem"><h3>Guthaben über Zeit</h3><canvas id="chartPlayerBal"></canvas></div>
+      <div class="card"><h3>Aktivität (14 Tage)</h3><canvas id="chartPlayerAct"></canvas></div>
+    </div>
+    <div class="dpane" id="pane-events">
+      <div class="evt-grid-d">
+        <button class="btn btn-green" onclick="setEvent('normal',currentDrawerUid)">🎲 Normal</button>
+        <button class="btn btn-gold" onclick="setEvent('threeBooks',currentDrawerUid)">📖 3 Bücher (zufällig)</button>
+        <button class="btn btn-purple" onclick="toggleSymPicker(currentDrawerUid)">🌟 Symbol erzwingen ▾</button>
+        <div id="symPickerWrapD"><label>Symbol wählen:</label><div id="symPickerD"></div></div>
+        <button class="btn btn-red" onclick="setEvent('legendary',currentDrawerUid)">🏆 Legendary Win</button>
+      </div>
+    </div>
+    <div class="dpane" id="pane-chat">
+      <div id="dChatMsgs"></div>
+      <div id="dChatInputRow">
+        <input type="text" id="dChatInput" placeholder="Antwort schreiben…" maxlength="500">
+        <button id="dChatSend">➤</button>
+      </div>
     </div>
   </div>
-
-  <!-- Spieler-Übersicht -->
-  <div class="card">
-    <div class="card-header">
-      <h2>👥 Spieler</h2>
-      <span style="font-size:.78rem;color:#666" id="playerCount"></span>
-    </div>
-    <button class="btn btn-sm btn-reset" style="margin-bottom:.8rem" onclick="deleteAllPlayers()">
-      🗑 Alle Spieler-Daten löschen
-    </button>
-    <div id="playersList"><div id="playersEmpty">Lade Spieler…</div></div>
-  </div>
-
-  <div id="status"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 const FIREBASE_CFG = {
   apiKey:            "AIzaSyDIbryLvdVvLnsCH72fmNQd_yCTNJdGAsA",
@@ -178,7 +347,6 @@ const FIREBASE_CFG = {
   messagingSenderId: "945474695262",
   appId:             "1:945474695262:web:417b17edc298df232c04cf"
 };
-const ADMIN_PW = "bora2024admin";
 
 const SYMBOLS = [
   {id:'book',  label:'📖 Buch',      def:2},
@@ -191,37 +359,62 @@ const SYMBOLS = [
   {id:'J',     label:'🃏 Bube',      def:11},
   {id:'ten',   label:'🃏 10',        def:18},
 ];
-const DEFAULT_W = {};
-SYMBOLS.forEach(s => DEFAULT_W[s.id] = s.def);
+const DEFAULT_W = {}; SYMBOLS.forEach(s => DEFAULT_W[s.id] = s.def);
 
 let db, ref, playersRef;
 let W = {...DEFAULT_W};
 let forceSym = null;
-let targetUid = null;   /* null = alle Spieler, sonst UID des ausgewählten Spielers */
-let targetName = '';
 let playersCache = {};
+let currentDrawerUid = null;
+let charts = {}; /* Chart.js Instanzen zum Zerstören/Neuzeichnen */
 
-function doLogin() {
-  if (document.getElementById('pw').value !== ADMIN_PW) {
-    document.getElementById('loginErr').textContent = 'Falsches Passwort';
+firebase.initializeApp(FIREBASE_CFG);
+
+/* ── Auth-Gate ── */
+document.getElementById('googleLoginBtn').onclick = () => {
+  document.getElementById('loadingGate').textContent = 'Anmeldung läuft…';
+  const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider).catch(e => {
+    document.getElementById('loadingGate').textContent = '❌ ' + e.message;
+  });
+};
+document.getElementById('logoutBtn').onclick = () => firebase.auth().signOut();
+
+firebase.auth().onAuthStateChanged(user => {
+  if (!user) {
+    document.getElementById('loginGate').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('deniedBox').style.display = 'none';
+    document.getElementById('loadingGate').textContent = '';
     return;
   }
-  document.getElementById('login').style.display = 'none';
-  document.getElementById('panel').style.display = 'block';
-  buildSliders();
-  buildSymPicker();
-  initFirebase();
-}
+  document.getElementById('loadingGate').textContent = 'Prüfe Zugriff…';
+  firebase.database().ref('admins/' + user.uid).once('value').then(snap => {
+    if (snap.val() === true) {
+      document.getElementById('loginGate').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('adminAvatar').src = user.photoURL || '';
+      document.getElementById('adminName').textContent = user.displayName || user.email || 'Admin';
+      initAdminApp();
+    } else {
+      document.getElementById('loadingGate').textContent = '';
+      document.getElementById('deniedBox').style.display = 'block';
+      document.getElementById('deniedUid').textContent = user.uid;
+    }
+  }).catch(e => {
+    document.getElementById('loadingGate').textContent = '❌ Zugriffsprüfung fehlgeschlagen: ' + e.message;
+  });
+});
 
-function initFirebase() {
-  firebase.initializeApp(FIREBASE_CFG);
-  db  = firebase.database();
+/* ── App-Initialisierung (nur nach erfolgreicher Admin-Prüfung) ── */
+function initAdminApp(){
+  db = firebase.database();
   ref = db.ref('gameConfig');
+  window._fbRef = ref;
 
   ref.once('value').then(snap => {
     if (!snap.exists()) ref.set({ weights: DEFAULT_W, nextSpin: 'normal', forceWild: null });
   });
-
   ref.on('value', snap => {
     document.getElementById('conn').textContent = '⬤ Live';
     document.getElementById('conn').className   = 'ok';
@@ -235,111 +428,292 @@ function initFirebase() {
   playersRef = db.ref('players');
   playersRef.on('value', snap => {
     playersCache = snap.val() || {};
-    renderPlayers();
+    renderDashboard();
+    renderPlayerTable();
+    renderChatOverview();
+    if (currentDrawerUid) renderDrawer(currentDrawerUid); /* live aktualisieren falls offen */
   });
+
+  buildSliders();
+  buildSymPicker('symPicker');
+  buildSymPicker('symPickerD');
+  wireNav();
+  wireSearch();
+  wireDrawerTabs();
+  wireBalanceEdit();
+  wireDrawerChat();
 }
 
-/* ── Zeit relativ formatieren ("vor 2 Min", "vor 3 Std", ...) ── */
-function timeAgo(ts) {
-  if (!ts) return '–';
-  const diff = Date.now() - ts;
-  const m = Math.floor(diff/60000), h = Math.floor(m/60), d = Math.floor(h/24);
-  if (d > 0) return `vor ${d} Tag${d>1?'en':''}`;
-  if (h > 0) return `vor ${h} Std.`;
-  if (m > 0) return `vor ${m} Min.`;
+/* ── Navigation ── */
+function wireNav(){
+  document.querySelectorAll('.navitem').forEach(el => {
+    el.onclick = () => switchView(el.dataset.view);
+  });
+}
+function switchView(name){
+  document.querySelectorAll('.navitem').forEach(el => el.classList.toggle('active', el.dataset.view===name));
+  document.querySelectorAll('.view').forEach(el => el.classList.toggle('active', el.id==='view-'+name));
+  const titles = {dashboard:'📈 Dashboard', players:'👥 Spieler', chat:'💬 Chat', settings:'⚙ Einstellungen'};
+  document.getElementById('viewTitle').textContent = titles[name] || '';
+}
+
+/* ── Hilfsfunktionen ── */
+function fmtEUR(n){ return typeof n==='number' ? n.toFixed(2).replace('.',',')+' €' : '–'; }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function timeAgo(ts){
+  if(!ts) return '–';
+  const diff=Date.now()-ts, m=Math.floor(diff/60000), h=Math.floor(m/60), d=Math.floor(h/24);
+  if(d>0) return `vor ${d} Tag${d>1?'en':''}`;
+  if(h>0) return `vor ${h} Std.`;
+  if(m>0) return `vor ${m} Min.`;
   return 'gerade eben';
 }
+function dayKey(d){ return d.toISOString().slice(0,10); }
+function last14Days(){
+  const days=[];
+  for(let i=13;i>=0;i--){ const d=new Date(Date.now()-i*86400000); days.push(dayKey(d)); }
+  return days;
+}
+function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
 
-function renderPlayers() {
-  const cont = document.getElementById('playersList');
+/* ── Dashboard ── */
+function renderDashboard(){
   const uids = Object.keys(playersCache);
-  document.getElementById('playerCount').textContent = uids.length ? `${uids.length} gesamt` : '';
+  const now = Date.now();
+  let active24=0, active7=0, totalSpins=0, balSum=0, balCount=0;
+  const regByDay={}, actByDay={};
+  last14Days().forEach(k=>{ regByDay[k]=0; actByDay[k]=0; });
 
-  if (!uids.length) {
-    cont.innerHTML = '<div id="playersEmpty">Noch keine Spieler registriert.</div>';
-    return;
-  }
-
-  /* Zuletzt aktive zuerst */
-  uids.sort((a,b) => (playersCache[b].lastSeen||0) - (playersCache[a].lastSeen||0));
-
-  cont.innerHTML = '';
-  uids.forEach(uid => {
+  uids.forEach(uid=>{
     const p = playersCache[uid];
-    const row = document.createElement('div');
-    row.className = 'player-row' + (uid === targetUid ? ' selected' : '');
-    const isTarget = uid === targetUid;
+    if (p.lastSeen && now-p.lastSeen < 86400000) active24++;
+    if (p.lastSeen && now-p.lastSeen < 7*86400000) active7++;
+    if (typeof p.spinsCount==='number') totalSpins+=p.spinsCount;
+    if (typeof p.balance==='number'){ balSum+=p.balance; balCount++; }
+    if (p.createdAt){ const k=dayKey(new Date(p.createdAt)); if(k in regByDay) regByDay[k]++; }
+    if (p.activityByDay){ Object.keys(p.activityByDay).forEach(k=>{ if(k in actByDay) actByDay[k]+=p.activityByDay[k]; }); }
+  });
 
-    const providerIcon = p.authProvider === 'google.com' ? '🔵 Google'
-                        : p.authProvider === 'phone'      ? '📱 Telefon'
-                        : p.authProvider === 'password'   ? '✉️ E-Mail'
-                        : '❔ Unbekannt';
-    const contactLine = p.email ? `✉️ <span>${escapeHtml(p.email)}</span>${p.emailVerified?' ✅':' ⚠️ unverifiziert'}`
-                       : p.phoneNumber ? `📞 <span>${escapeHtml(p.phoneNumber)}</span>`
-                       : '';
+  document.getElementById('kpiTotal').textContent = uids.length;
+  document.getElementById('kpiActive24').textContent = active24;
+  document.getElementById('kpiActive7').textContent = active7;
+  document.getElementById('kpiSpins').textContent = totalSpins;
+  document.getElementById('kpiAvgBal').textContent = balCount ? fmtEUR(balSum/balCount) : '0 €';
 
-    row.innerHTML = `
-      <div class="player-top">
-        <span class="player-name">${escapeHtml(p.name || 'Unbenannt')}</span>
-        <span class="player-bal">${fmtEUR(p.balance)}</span>
-      </div>
-      <div class="player-meta">
-        ${providerIcon}${contactLine ? ' · '+contactLine : ''}<br>
-        📱 <span>${escapeHtml(p.device||'?')}</span> ·
-        🌐 <span>${escapeHtml(p.ip||'?')}</span> ·
-        🕓 <span>${timeAgo(p.lastSeen)}</span><br>
-        🗣 <span>${escapeHtml(p.language||'?')}</span> ·
-        🕐 <span>${escapeHtml(p.timezone||'?')}</span> ·
-        📅 seit <span>${p.createdAt ? new Date(p.createdAt).toLocaleDateString('de-DE') : '?'}</span>
-      </div>
-      <div class="player-actions">
-        <button class="btn-target ${isTarget?'is-target':''}" onclick="selectPlayer('${uid}','${escapeHtml(p.name||'Unbenannt')}')">
-          ${isTarget ? '🎯 Ziel aktiv' : '🎯 Als Ziel wählen'}
-        </button>
-      </div>`;
-    cont.appendChild(row);
+  const days = last14Days();
+  const labels = days.map(k=>k.slice(5)); /* MM-DD */
+
+  destroyChart('reg');
+  charts.reg = new Chart(document.getElementById('chartReg'), {
+    type:'bar',
+    data:{labels, datasets:[{label:'Neue Spieler', data:days.map(k=>regByDay[k]), backgroundColor:'#ffd700aa'}]},
+    options:chartOpts()
+  });
+
+  destroyChart('act');
+  charts.act = new Chart(document.getElementById('chartAct'), {
+    type:'bar',
+    data:{labels, datasets:[{label:'Spins', data:days.map(k=>actByDay[k]), backgroundColor:'#44ff88aa'}]},
+    options:chartOpts()
+  });
+
+  const buckets=[0,0,0,0,0]; /* <100, 100-500, 500-1000, 1000-5000, >5000 */
+  uids.forEach(uid=>{
+    const b = playersCache[uid].balance;
+    if(typeof b!=='number') return;
+    if(b<100) buckets[0]++; else if(b<500) buckets[1]++; else if(b<1000) buckets[2]++;
+    else if(b<5000) buckets[3]++; else buckets[4]++;
+  });
+  destroyChart('balDist');
+  charts.balDist = new Chart(document.getElementById('chartBalDist'), {
+    type:'bar',
+    data:{labels:['<100€','100-500€','500-1k€','1k-5k€','>5k€'], datasets:[{label:'Spieler', data:buckets, backgroundColor:'#cc88ffaa'}]},
+    options:chartOpts()
   });
 }
-
-function fmtEUR(n) {
-  if (typeof n !== 'number') return '–';
-  return n.toFixed(2).replace('.',',') + ' €';
+function chartOpts(){
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#887',font:{size:10}}, grid:{color:'#ffffff0a'}},
+      y:{ticks:{color:'#887',font:{size:10}}, grid:{color:'#ffffff0a'}, beginAtZero:true}
+    }
+  };
 }
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* ── Spieler-Tabelle ── */
+function renderPlayerTable(filter){
+  filter = (filter||'').toLowerCase();
+  const tbody = document.getElementById('playerTableBody');
+  const uids = Object.keys(playersCache).sort((a,b)=>(playersCache[b].lastSeen||0)-(playersCache[a].lastSeen||0));
+  tbody.innerHTML='';
+  uids.forEach(uid=>{
+    const p = playersCache[uid];
+    const hay = ((p.name||'')+' '+(p.email||'')).toLowerCase();
+    if(filter && !hay.includes(filter)) return;
+    const isOnline = p.lastSeen && (Date.now()-p.lastSeen < 5*60000);
+    const tr = document.createElement('tr');
+    tr.onclick = () => openDrawer(uid);
+    tr.innerHTML = `
+      <td><span class="dot ${isOnline?'on':'off'}"></span></td>
+      <td class="pname">${escapeHtml(p.name||'Unbenannt')}</td>
+      <td class="pbal">${fmtEUR(p.balance)}</td>
+      <td>${escapeHtml(p.device||'?')}</td>
+      <td>${timeAgo(p.lastSeen)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+function wireSearch(){
+  document.getElementById('playerSearch').oninput = e => renderPlayerTable(e.target.value);
 }
 
-/* ── Ziel-Auswahl für Events ── */
-function selectPlayer(uid, name) {
-  targetUid = uid; targetName = name;
-  document.getElementById('targetBar').classList.add('active');
-  document.getElementById('targetLabel').innerHTML = `Ziel: <b>🎯 ${escapeHtml(name)}</b>`;
-  renderPlayers();
-  showStatus(`Ziel gesetzt: ${name}`,'ok');
+/* ── Chat-Übersicht ── */
+function renderChatOverview(){
+  const uids = Object.keys(playersCache);
+  const rows = [];
+  let unreadTotal = 0;
+
+  uids.forEach(uid=>{
+    const p = playersCache[uid];
+    if(!p.chat) return;
+    const msgs = Object.values(p.chat).sort((a,b)=>a.t-b.t);
+    if(!msgs.length) return;
+    const last = msgs[msgs.length-1];
+    const lastRead = p.lastReadByAdmin||0;
+    const unread = msgs.some(m=>m.from==='player' && m.t>lastRead);
+    if(unread) unreadTotal++;
+    rows.push({uid, name:p.name||'Unbenannt', preview:last.text, time:last.t, unread});
+  });
+  rows.sort((a,b)=>b.time-a.time);
+
+  const cont = document.getElementById('chatOverviewList');
+  cont.innerHTML = rows.length ? '' : '<div style="color:#665;text-align:center;padding:2rem">Noch keine Chat-Nachrichten.</div>';
+  rows.forEach(r=>{
+    const row = document.createElement('div');
+    row.className='chat-row';
+    row.onclick = () => { openDrawer(r.uid); switchDrawerTab('chat'); };
+    row.innerHTML = `
+      <span class="cname">${escapeHtml(r.name)}${r.unread?'<span class="unread-pill">●</span>':''}</span>
+      <span class="cpreview">${escapeHtml(r.preview)}</span>
+      <span class="ctime">${timeAgo(r.time)}</span>`;
+    cont.appendChild(row);
+  });
+
+  const badge = document.getElementById('navChatBadge');
+  if(unreadTotal>0){ badge.style.display='inline-block'; badge.textContent=unreadTotal; }
+  else badge.style.display='none';
 }
 
-function clearTarget() {
-  targetUid = null; targetName = '';
-  document.getElementById('targetBar').classList.remove('active');
-  document.getElementById('targetLabel').innerHTML = 'Ziel: <b>🌐 Alle Spieler</b>';
-  renderPlayers();
+/* ── Spieler-Drawer ── */
+function openDrawer(uid){
+  currentDrawerUid = uid;
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  renderDrawer(uid);
+  switchDrawerTab('profile');
+}
+function closeDrawer(){
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+  currentDrawerUid = null;
+  destroyChart('playerBal'); destroyChart('playerAct');
+}
+function wireDrawerTabs(){
+  document.querySelectorAll('.dtab').forEach(el=>{
+    el.onclick = () => switchDrawerTab(el.dataset.tab);
+  });
+}
+function switchDrawerTab(tab){
+  document.querySelectorAll('.dtab').forEach(el=>el.classList.toggle('active', el.dataset.tab===tab));
+  document.querySelectorAll('.dpane').forEach(el=>el.classList.toggle('active', el.id==='pane-'+tab));
+  if(tab==='chat' && currentDrawerUid){
+    db.ref('players/'+currentDrawerUid+'/lastReadByAdmin').set(Date.now()).catch(()=>{});
+  }
 }
 
-/* Löscht alle Spieler-DATENSÄTZE (Guthaben, Name, Geräteinfo usw.) aus der
-   Datenbank. Löscht NICHT die eigentlichen Firebase-Auth-Konten selbst
-   (Google/Telefon/E-Mail-Identitäten) — die bleiben registriert, sind aber
-   ohne Datensatz beim nächsten Login einfach "neu". Um auch die Auth-Konten
-   selbst zu entfernen: Firebase-Konsole → Authentication → Nutzer → Auswahl → Löschen. */
-function deleteAllPlayers() {
-  if (!confirm('Wirklich ALLE Spieler-Datensätze löschen? (Guthaben, Namen, Geräteinfo)\n\nDies kann nicht rückgängig gemacht werden.')) return;
-  if (!playersRef) { showStatus('❌ Nicht verbunden','fail'); return; }
-  playersRef.remove()
-    .then(() => showStatus('✓ Alle Spieler-Datensätze gelöscht','ok'))
-    .catch(e => showStatus('❌ '+e.message,'fail'));
+function renderDrawer(uid){
+  const p = playersCache[uid];
+  if(!p) return;
+
+  document.getElementById('dAvatar').src = p.photoURL || '';
+  document.getElementById('dName').textContent = p.name || 'Unbenannt';
+  document.getElementById('dMeta').textContent = (p.email||p.phoneNumber||'') ;
+
+  const providerLabel = p.authProvider==='google.com' ? '🔵 Google'
+                      : p.authProvider==='password'   ? '✉️ E-Mail'
+                      : p.authProvider==='phone'       ? '📱 Telefon' : '❔ Unbekannt';
+
+  document.getElementById('dInfoRows').innerHTML = `
+    <div class="infoRow"><span>Anmeldeart</span><span>${providerLabel}</span></div>
+    <div class="infoRow"><span>E-Mail</span><span>${escapeHtml(p.email||'–')} ${p.emailVerified?'✅':(p.email?'⚠️':'')}</span></div>
+    <div class="infoRow"><span>Guthaben</span><span>${fmtEUR(p.balance)}</span></div>
+    <div class="infoRow"><span>Spins gesamt</span><span>${p.spinsCount||0}</span></div>
+    <div class="infoRow"><span>Gerät</span><span>${escapeHtml(p.device||'?')}</span></div>
+    <div class="infoRow"><span>IP</span><span>${escapeHtml(p.ip||'?')}</span></div>
+    <div class="infoRow"><span>Sprache</span><span>${escapeHtml(p.language||'?')}</span></div>
+    <div class="infoRow"><span>Zeitzone</span><span>${escapeHtml(p.timezone||'?')}</span></div>
+    <div class="infoRow"><span>Registriert</span><span>${p.createdAt?new Date(p.createdAt).toLocaleDateString('de-DE'):'?'}</span></div>
+    <div class="infoRow"><span>Zuletzt aktiv</span><span>${timeAgo(p.lastSeen)}</span></div>`;
+
+  document.getElementById('balEditInput').value = (typeof p.balance==='number'?p.balance:0).toFixed(2);
+
+  /* Guthaben-über-Zeit Chart */
+  const balHist = p.balanceHistory ? Object.values(p.balanceHistory).sort((a,b)=>a.t-b.t) : [];
+  destroyChart('playerBal');
+  charts.playerBal = new Chart(document.getElementById('chartPlayerBal'), {
+    type:'line',
+    data:{
+      labels: balHist.map(e=>new Date(e.t).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),
+      datasets:[{label:'Guthaben', data:balHist.map(e=>e.bal), borderColor:'#ffd700', backgroundColor:'#ffd70022', tension:.2, fill:true}]
+    },
+    options: chartOpts()
+  });
+
+  /* Aktivität Chart */
+  const days = last14Days();
+  const act = days.map(k => (p.activityByDay && p.activityByDay[k]) || 0);
+  destroyChart('playerAct');
+  charts.playerAct = new Chart(document.getElementById('chartPlayerAct'), {
+    type:'bar',
+    data:{labels:days.map(k=>k.slice(5)), datasets:[{label:'Spins', data:act, backgroundColor:'#44ff88aa'}]},
+    options: chartOpts()
+  });
+
+  /* Chat-Verlauf */
+  const msgs = p.chat ? Object.values(p.chat).sort((a,b)=>a.t-b.t) : [];
+  document.getElementById('dChatMsgs').innerHTML = msgs.length
+    ? msgs.map(m=>`<div class="chatMsg ${m.from==='admin'?'from-admin':'from-player'}">${escapeHtml(m.text)}</div>`).join('')
+    : '<div style="color:#665;font-size:.82rem;text-align:center">Noch keine Nachrichten.</div>';
 }
 
-function buildSliders() {
+function wireBalanceEdit(){
+  document.getElementById('balEditSave').onclick = () => {
+    if(!currentDrawerUid) return;
+    const val = parseFloat(document.getElementById('balEditInput').value);
+    if(isNaN(val) || val<0){ showStatus('❌ Ungültiger Betrag','fail'); return; }
+    const pRef = db.ref('players/'+currentDrawerUid);
+    pRef.update({balance: val}).then(()=>{
+      pRef.child('balanceHistory').push({t:Date.now(), bal:val, adminEdit:true});
+      showStatus('✓ Guthaben aktualisiert','ok');
+    }).catch(e=>showStatus('❌ '+e.message,'fail'));
+  };
+}
+
+function wireDrawerChat(){
+  document.getElementById('dChatSend').onclick = () => {
+    if(!currentDrawerUid) return;
+    const inp = document.getElementById('dChatInput');
+    const text = inp.value.trim();
+    if(!text) return;
+    db.ref('players/'+currentDrawerUid+'/chat').push({from:'admin', text, t:Date.now()}).catch(()=>{});
+    inp.value='';
+  };
+  document.getElementById('dChatInput').onkeydown = e => { if(e.key==='Enter') document.getElementById('dChatSend').click(); };
+}
+
+/* ── Gewichte (wiederverwendet aus vorheriger Version) ── */
+function buildSliders(){
   const c = document.getElementById('sliders');
   c.innerHTML = '';
   SYMBOLS.forEach(s => {
@@ -347,118 +721,101 @@ function buildSliders() {
     row.className = 'sym-row';
     row.innerHTML = `
       <label>${s.label}</label>
-      <input type="range" id="sl_${s.id}" min="1" max="60" value="${W[s.id]}"
-             oninput="moveSlider('${s.id}',+this.value)">
+      <input type="range" id="sl_${s.id}" min="1" max="60" value="${W[s.id]}" oninput="moveSlider('${s.id}',+this.value)">
       <span class="val" id="vl_${s.id}">${W[s.id]}</span>
       <span class="pct" id="pc_${s.id}"></span>`;
     c.appendChild(row);
   });
   recalcPct();
 }
-
-function renderSliders() {
+function renderSliders(){
   SYMBOLS.forEach(s => {
-    const sl = document.getElementById('sl_'+s.id);
-    const vl = document.getElementById('vl_'+s.id);
-    if (sl) { sl.value = W[s.id]; vl.textContent = W[s.id]; }
+    const sl=document.getElementById('sl_'+s.id), vl=document.getElementById('vl_'+s.id);
+    if(sl){ sl.value=W[s.id]; vl.textContent=W[s.id]; }
   });
   recalcPct();
 }
-
-function moveSlider(id, newVal) {
-  const oldVal = W[id];
-  const delta  = newVal - oldVal;
-  if (delta === 0) return;
-
-  const othersTotal = SYMBOLS.reduce((sum, s) => s.id===id ? sum : sum+W[s.id], 0);
-  if (othersTotal <= 0) return;
-
-  SYMBOLS.forEach(s => {
-    if (s.id === id) return;
-    const adj = W[s.id] - delta * (W[s.id] / othersTotal);
-    W[s.id] = Math.max(1, Math.round(adj));
+function moveSlider(id, newVal){
+  const oldVal=W[id], delta=newVal-oldVal;
+  if(delta===0) return;
+  const othersTotal = SYMBOLS.reduce((sum,s)=> s.id===id?sum:sum+W[s.id],0);
+  if(othersTotal<=0) return;
+  SYMBOLS.forEach(s=>{
+    if(s.id===id) return;
+    W[s.id] = Math.max(1, Math.round(W[s.id] - delta*(W[s.id]/othersTotal)));
   });
-  W[id] = newVal;
-
+  W[id]=newVal;
   renderSliders();
   pushWeights();
 }
-
-function recalcPct() {
-  const total = SYMBOLS.reduce((s,sym) => s+W[sym.id], 0);
-  SYMBOLS.forEach(s => {
-    const el = document.getElementById('pc_'+s.id);
-    if (el) el.textContent = (W[s.id]/total*100).toFixed(1)+'%';
+function recalcPct(){
+  const total = SYMBOLS.reduce((s,sym)=>s+W[sym.id],0);
+  SYMBOLS.forEach(s=>{
+    const el=document.getElementById('pc_'+s.id);
+    if(el) el.textContent=(W[s.id]/total*100).toFixed(1)+'%';
   });
 }
-
-function resetWeights() {
-  W = {...DEFAULT_W};
+function resetWeights(){
+  W={...DEFAULT_W};
   renderSliders();
-  if (ref) ref.update({weights: W})
-    .then(() => showStatus('✓ Auf Original zurückgesetzt','ok'))
-    .catch(e => showStatus('❌ '+e.message,'fail'));
+  if(ref) ref.update({weights:W}).then(()=>showStatus('✓ Auf Original zurückgesetzt','ok')).catch(e=>showStatus('❌ '+e.message,'fail'));
 }
-
-let _pt = null;
-function pushWeights() {
+let _pt=null;
+function pushWeights(){
   clearTimeout(_pt);
-  _pt = setTimeout(() => {
-    if (!ref) return;
-    ref.update({weights: W})
-      .then(() => showStatus('✓ Live übertragen','ok'))
-      .catch(e => showStatus('❌ '+e.message,'fail'));
-  }, 350);
+  _pt=setTimeout(()=>{
+    if(!ref) return;
+    ref.update({weights:W}).then(()=>showStatus('✓ Live übertragen','ok')).catch(e=>showStatus('❌ '+e.message,'fail'));
+  },350);
 }
 
-function setEvent(type) {
-  const eventRef = targetUid ? db.ref('players/'+targetUid) : ref;
-  if (!eventRef) { showStatus('❌ Nicht verbunden','fail'); return; }
-  const payload = { nextSpin: type, forceWild: forceSym };
-
-  if (type === 'forceSym') {
-    if (!forceSym) { showStatus('Bitte erst Symbol auswählen','fail'); return; }
+/* ── Events (jetzt korrekt: global via gameConfig, gezielt via players/{uid}) ── */
+function setEvent(type, uid){
+  const eventRef = uid ? db.ref('players/'+uid) : ref;
+  if(!eventRef){ showStatus('❌ Nicht verbunden','fail'); return; }
+  const payload = { nextSpin:type, forceWild:forceSym };
+  if(type==='forceSym'){
+    if(!forceSym){ showStatus('Bitte erst Symbol auswählen','fail'); return; }
     payload.forceWild = forceSym;
   }
-
-  const label = targetUid ? `${targetName} (gezielt)` : 'alle Spieler';
+  const label = uid ? (playersCache[uid]?.name||'Spieler') : 'alle Spieler';
   eventRef.update(payload)
-    .then(() => showStatus(`✓ Event "${type}" gesetzt für: ${label}`,'ok'))
-    .catch(e => showStatus('❌ '+e.message,'fail'));
-
-  if (type !== 'normal') setTimeout(() => eventRef?.update({nextSpin:'normal',forceWild:null}), 12000);
+    .then(()=>showStatus(`✓ Event "${type}" gesetzt für: ${label}`,'ok'))
+    .catch(e=>showStatus('❌ '+e.message,'fail'));
+  if(type!=='normal') setTimeout(()=>eventRef?.update({nextSpin:'normal',forceWild:null}),12000);
 }
 
-function buildSymPicker() {
-  const wrap = document.getElementById('symPicker');
-  SYMBOLS.filter(s => s.id !== 'book').forEach(s => {
-    const btn = document.createElement('button');
-    btn.className = 'sym-opt';
-    btn.textContent = s.label;
-    btn.dataset.id  = s.id;
-    btn.onclick = () => selectSym(s.id, btn);
+function buildSymPicker(containerId){
+  const wrap=document.getElementById(containerId);
+  SYMBOLS.filter(s=>s.id!=='book').forEach(s=>{
+    const btn=document.createElement('button');
+    btn.className='sym-opt'; btn.textContent=s.label; btn.dataset.id=s.id;
+    btn.onclick=()=>selectSym(s.id, containerId==='symPickerD'?currentDrawerUid:null, btn, containerId);
     wrap.appendChild(btn);
   });
 }
-
-function toggleSymPicker() {
-  const w = document.getElementById('symPickerWrap');
-  w.style.display = w.style.display === 'block' ? 'none' : 'block';
+function toggleSymPicker(uid){
+  const w = uid ? document.getElementById('symPickerWrapD') : document.getElementById('symPickerWrap');
+  w.style.display = w.style.display==='block' ? 'none' : 'block';
 }
-
-function selectSym(id, btn) {
-  document.querySelectorAll('.sym-opt').forEach(b => b.classList.remove('active'));
+function selectSym(id, uid, btn, containerId){
+  document.querySelectorAll('#'+containerId+' .sym-opt').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   forceSym = id;
-  setEvent('forceSym');
+  setEvent('forceSym', uid);
 }
 
-function showStatus(msg, cls) {
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  el.className = cls;
+function deleteAllPlayers(){
+  if(!confirm('Wirklich ALLE Spieler-Datensätze löschen? (Guthaben, Namen, Chats, Statistiken)\n\nDies kann nicht rückgängig gemacht werden.')) return;
+  if(!playersRef){ showStatus('❌ Nicht verbunden','fail'); return; }
+  playersRef.remove().then(()=>showStatus('✓ Alle Spieler-Datensätze gelöscht','ok')).catch(e=>showStatus('❌ '+e.message,'fail'));
+}
+
+function showStatus(msg, cls){
+  const el=document.getElementById('status');
+  el.textContent=msg; el.className=cls;
   clearTimeout(el._t);
-  el._t = setTimeout(() => { el.textContent=''; el.className=''; }, 3000);
+  el._t=setTimeout(()=>{ el.textContent=''; el.className=''; },3000);
 }
 </script>
 </body>
