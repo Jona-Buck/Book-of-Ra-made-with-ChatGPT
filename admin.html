@@ -183,7 +183,7 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:'Segoe UI',sans-serif;min-heig
   <div id="loadingGate"></div>
   <div id="deniedBox">
     <div style="color:#ff6666;font-weight:700;margin-bottom:.4rem">Kein Admin-Zugriff</div>
-    <div style="font-size:.85rem;color:#c8b080">Dieses Konto ist noch nicht als Admin freigeschaltet. Füge folgende UID in der Firebase-Konsole unter <code style="display:inline;padding:.1em .3em">admins/&lt;UID&gt;: true</code> hinzu:</div>
+    <div style="font-size:.85rem;color:#c8b080">Dieses Google-Konto ist nicht als Administrator autorisiert. Angemeldet als:</div>
     <code id="deniedUid"></code>
   </div>
 </div>
@@ -370,6 +370,8 @@ let charts = {}; /* Chart.js Instanzen zum Zerstören/Neuzeichnen */
 
 firebase.initializeApp(FIREBASE_CFG);
 
+const ADMIN_EMAIL = 'jona.buck.zweitadresse@gmx.de';
+
 /* ── Auth-Gate ── */
 document.getElementById('googleLoginBtn').onclick = () => {
   document.getElementById('loadingGate').textContent = 'Anmeldung läuft…';
@@ -388,22 +390,19 @@ firebase.auth().onAuthStateChanged(user => {
     document.getElementById('loadingGate').textContent = '';
     return;
   }
-  document.getElementById('loadingGate').textContent = 'Prüfe Zugriff…';
-  firebase.database().ref('admins/' + user.uid).once('value').then(snap => {
-    if (snap.val() === true) {
-      document.getElementById('loginGate').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      document.getElementById('adminAvatar').src = user.photoURL || '';
-      document.getElementById('adminName').textContent = user.displayName || user.email || 'Admin';
-      initAdminApp();
-    } else {
-      document.getElementById('loadingGate').textContent = '';
-      document.getElementById('deniedBox').style.display = 'block';
-      document.getElementById('deniedUid').textContent = user.uid;
-    }
-  }).catch(e => {
-    document.getElementById('loadingGate').textContent = '❌ Zugriffsprüfung fehlgeschlagen: ' + e.message;
-  });
+  if (user.email === ADMIN_EMAIL) {
+    document.getElementById('loginGate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('adminAvatar').src = user.photoURL || '';
+    document.getElementById('adminName').textContent = user.displayName || user.email || 'Admin';
+    initAdminApp();
+  } else {
+    /* Falsches Konto — sofort abmelden, kein Zugriff auf irgendetwas gewähren */
+    document.getElementById('loadingGate').textContent = '';
+    document.getElementById('deniedBox').style.display = 'block';
+    document.getElementById('deniedUid').textContent = user.email || user.uid;
+    firebase.auth().signOut();
+  }
 });
 
 /* ── App-Initialisierung (nur nach erfolgreicher Admin-Prüfung) ── */
