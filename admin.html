@@ -456,12 +456,20 @@ function initAdminApp(){
   });
 
   playersRef = db.ref('players');
+  let _renderTimer=null;
   playersRef.on('value', snap => {
     playersCache = snap.val() || {};
-    renderDashboard();
-    renderPlayerTable();
-    renderChatOverview();
-    if (currentDrawerUid) renderDrawer(currentDrawerUid); /* live aktualisieren falls offen */
+    /* Gedrosselt (max. alle 400ms neu rendern) — bei vielen gleichzeitig
+       aktiven Spielern soll nicht jeder einzelne Spin sofort einen kompletten
+       Re-Render aller Ansichten auslösen. Charts/KPIs animieren dank
+       _upsertChart/_animateKpi ohnehin sanft, kein Flackern mehr. */
+    clearTimeout(_renderTimer);
+    _renderTimer = setTimeout(()=>{
+      renderDashboard();
+      renderPlayerTable(document.getElementById('playerSearch')?.value || '');
+      renderChatOverview();
+      if (currentDrawerUid) renderDrawer(currentDrawerUid);
+    }, 400);
   });
 
   buildSliders();
@@ -504,7 +512,40 @@ function last14Days(){
   for(let i=13;i>=0;i--){ const d=new Date(Date.now()-i*86400000); days.push(dayKey(d)); }
   return days;
 }
-function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+/* Aktualisiert eine bestehende Chart.js-Instanz in-place (Chart.js animiert
+   Datenänderungen automatisch sanft) statt sie zu zerstören und neu
+   aufzubauen — verhindert das Flackern bei häufigen Firebase-Updates. */
+function _upsertChart(id, canvasEl, type, labels, datasets, opts){
+  if(charts[id]){
+    const c = charts[id];
+    c.data.labels = labels;
+    datasets.forEach((ds,i)=>{
+      if(c.data.datasets[i]) Object.assign(c.data.datasets[i], ds);
+      else c.data.datasets.push(ds);
+    });
+    c.data.datasets.length = datasets.length; /* überzählige alte Datasets kappen */
+    c.update();
+  } else {
+    charts[id] = new Chart(canvasEl, { type, data:{labels, datasets}, options: opts });
+  }
+}
+
+/* Animiert eine KPI-Zahl sanft vom aktuell angezeigten zum neuen Wert,
+   statt sie hart zu ersetzen. fmt: optionaler Formatter (z.B. für Euro). */
+function _animateKpi(el, to, fmt){
+  const from = parseFloat((el.dataset.raw ?? el.textContent).toString().replace(/[^\d.-]/g,'')) || 0;
+  el.dataset.raw = to;
+  if(from === to){ el.textContent = fmt ? fmt(to) : Math.round(to); return; }
+  const dur=500, t0=performance.now();
+  function frame(now){
+    const p = Math.min((now-t0)/dur, 1);
+    const eased = 1 - Math.pow(1-p, 3); /* easeOutCubic */
+    const v = from + (to-from)*eased;
+    el.textContent = fmt ? fmt(v) : Math.round(v);
+    if(p<1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
 
 /* ── Dashboard ── */
 function renderDashboard(){
@@ -524,28 +565,20 @@ function renderDashboard(){
     if (p.activityByDay){ Object.keys(p.activityByDay).forEach(k=>{ if(k in actByDay) actByDay[k]+=p.activityByDay[k]; }); }
   });
 
-  document.getElementById('kpiTotal').textContent = uids.length;
-  document.getElementById('kpiActive24').textContent = active24;
-  document.getElementById('kpiActive7').textContent = active7;
-  document.getElementById('kpiSpins').textContent = totalSpins;
-  document.getElementById('kpiAvgBal').textContent = balCount ? fmtEUR(balSum/balCount) : '0 €';
+  _animateKpi(document.getElementById('kpiTotal'), uids.length);
+  _animateKpi(document.getElementById('kpiActive24'), active24);
+  _animateKpi(document.getElementById('kpiActive7'), active7);
+  _animateKpi(document.getElementById('kpiSpins'), totalSpins);
+  _animateKpi(document.getElementById('kpiAvgBal'), balCount ? balSum/balCount : 0, fmtEUR);
 
   const days = last14Days();
   const labels = days.map(k=>k.slice(5)); /* MM-DD */
 
-  destroyChart('reg');
-  charts.reg = new Chart(document.getElementById('chartReg'), {
-    type:'bar',
-    data:{labels, datasets:[{label:'Neue Spieler', data:days.map(k=>regByDay[k]), backgroundColor:'#4FD1C5aa'}]},
-    options:chartOpts()
-  });
+  _upsertChart('reg', document.getElementById('chartReg'), 'bar',
+    labels, [{label:'Neue Spieler', data:days.map(k=>regByDay[k]), backgroundColor:'#4FD1C5aa'}], chartOpts());
 
-  destroyChart('act');
-  charts.act = new Chart(document.getElementById('chartAct'), {
-    type:'bar',
-    data:{labels, datasets:[{label:'Spins', data:days.map(k=>actByDay[k]), backgroundColor:'#E8A33Daa'}]},
-    options:chartOpts()
-  });
+  _upsertChart('act', document.getElementById('chartAct'), 'bar',
+    labels, [{label:'Spins', data:days.map(k=>actByDay[k]), backgroundColor:'#E8A33Daa'}], chartOpts());
 
   const buckets=[0,0,0,0,0]; /* <100, 100-500, 500-1000, 1000-5000, >5000 */
   uids.forEach(uid=>{
@@ -554,12 +587,8 @@ function renderDashboard(){
     if(b<100) buckets[0]++; else if(b<500) buckets[1]++; else if(b<1000) buckets[2]++;
     else if(b<5000) buckets[3]++; else buckets[4]++;
   });
-  destroyChart('balDist');
-  charts.balDist = new Chart(document.getElementById('chartBalDist'), {
-    type:'bar',
-    data:{labels:['<100€','100-500€','500-1k€','1k-5k€','>5k€'], datasets:[{label:'Spieler', data:buckets, backgroundColor:'#7C8894aa'}]},
-    options:chartOpts()
-  });
+  _upsertChart('balDist', document.getElementById('chartBalDist'), 'bar',
+    ['<100€','100-500€','500-1k€','1k-5k€','>5k€'], [{label:'Spieler', data:buckets, backgroundColor:'#7C8894aa'}], chartOpts());
 }
 function chartOpts(){
   return {
@@ -654,7 +683,7 @@ function closeDrawer(){
   document.getElementById('drawerOverlay').classList.remove('open');
   document.getElementById('drawer').classList.remove('open');
   currentDrawerUid = null;
-  destroyChart('playerBal'); destroyChart('playerAct');
+  ['playerBal','playerAct'].forEach(id=>{ if(charts[id]){ charts[id].destroy(); delete charts[id]; } });
 }
 function wireDrawerTabs(){
   document.querySelectorAll('.dtab').forEach(el=>{
@@ -697,25 +726,16 @@ function renderDrawer(uid){
 
   /* Guthaben-über-Zeit Chart */
   const balHist = p.balanceHistory ? Object.values(p.balanceHistory).sort((a,b)=>a.t-b.t) : [];
-  destroyChart('playerBal');
-  charts.playerBal = new Chart(document.getElementById('chartPlayerBal'), {
-    type:'line',
-    data:{
-      labels: balHist.map(e=>new Date(e.t).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),
-      datasets:[{label:'Guthaben', data:balHist.map(e=>e.bal), borderColor:'#4FD1C5', backgroundColor:'#4FD1C522', tension:.2, fill:true}]
-    },
-    options: chartOpts()
-  });
+  _upsertChart('playerBal', document.getElementById('chartPlayerBal'), 'line',
+    balHist.map(e=>new Date(e.t).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})),
+    [{label:'Guthaben', data:balHist.map(e=>e.bal), borderColor:'#4FD1C5', backgroundColor:'#4FD1C522', tension:.2, fill:true}],
+    chartOpts());
 
   /* Aktivität Chart */
   const days = last14Days();
   const act = days.map(k => (p.activityByDay && p.activityByDay[k]) || 0);
-  destroyChart('playerAct');
-  charts.playerAct = new Chart(document.getElementById('chartPlayerAct'), {
-    type:'bar',
-    data:{labels:days.map(k=>k.slice(5)), datasets:[{label:'Spins', data:act, backgroundColor:'#E8A33Daa'}]},
-    options: chartOpts()
-  });
+  _upsertChart('playerAct', document.getElementById('chartPlayerAct'), 'bar',
+    days.map(k=>k.slice(5)), [{label:'Spins', data:act, backgroundColor:'#E8A33Daa'}], chartOpts());
 
   /* Chat-Verlauf */
   const msgs = p.chat ? Object.values(p.chat).sort((a,b)=>a.t-b.t) : [];
